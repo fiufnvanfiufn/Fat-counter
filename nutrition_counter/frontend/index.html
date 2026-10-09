@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#234b3e">
+  <meta name="description" content="Демонстрационный макет помощника по питанию с ответами и текстовыми источниками.">
+  <title>Nutrition Counter — помощник по питанию</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="svg-defs" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><defs>
+    <symbol id="leaf" viewBox="0 0 24 24"><path d="M20 4C9 2 3 7 5 14c2 6 13 7 15-10Z"/><path d="m4 21 11-11M8 17v-6m4 2h5"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="chat" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 1-8 8H4l1-5a8 8 0 1 1 15-3Z"/><path d="M8 10h8M8 14h5"/></symbol>
+    <symbol id="book" viewBox="0 0 24 24"><path d="M12 5c-3-2-6-2-9-1v15c3-1 6-1 9 1 3-2 6-2 9-1V4c-3-1-6-1-9 1Zm0 0v15"/></symbol>
+    <symbol id="spark" viewBox="0 0 24 24"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5L12 3Z"/></symbol>
+    <symbol id="arrow" viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></symbol>
+    <symbol id="chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+    <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+  </defs></svg>
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="./" aria-label="Nutrition Counter, главная"><span class="brand-mark"><svg><use href="#leaf"/></svg></span><span>nutrition<span class="brand-second">counter</span></span></a>
+    <button class="new-chat" id="new-chat"><svg><use href="#plus"/></svg> Новый разговор</button>
+    <div class="sidebar-label">ВАШЕ ПРОСТРАНСТВО</div>
+    <button class="nav-item active" id="assistant-nav"><svg><use href="#chat"/></svg> Помощник по питанию <span class="nav-dot"></span></button>
+    <button class="nav-item" id="sources-nav"><svg><use href="#book"/></svg> Об источниках</button>
+    <div class="sidebar-note"><span class="small-leaf"><svg><use href="#leaf"/></svg></span><h3>Маленькие шаги.<br>Здоровые привычки.</h3><p>Разбираться в питании проще,<br>когда есть с кем обсудить.</p><div class="note-line"></div><span>В вашем темпе, каждый день</span></div>
+    <div class="sidebar-bottom"><span class="demo-dot"></span> Демонстрационная версия <span class="version">v0.1</span></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar"><div class="topbar-title"><button class="icon-button mobile-menu" id="menu-button" aria-label="Открыть меню" aria-expanded="false" aria-controls="sidebar"><svg><use href="#menu"/></svg></button><span>Помощник по питанию</span><span class="beta">МАКЕТ</span></div><button class="source-pill" id="top-sources"><svg><use href="#book"/></svg><span>Ответы с источниками</span></button></header>
+    <main>
+      <section class="welcome" id="welcome">
+        <div class="welcome-emblem"><svg><use href="#leaf"/></svg><span class="emblem-spark">✦</span></div>
+        <div class="eyebrow">ЧУТЬ БОЛЬШЕ ЯСНОСТИ В ВАШЕМ РАЦИОНЕ</div>
+        <h1>Поговорим о питании?</h1>
+        <p class="intro">Задайте вопрос о продуктах и полезных привычках.<br>Помогу разобраться и покажу, на какие статьи опирается ответ.</p>
+        <div class="suggestion-heading">С чего начнём?<span>Несколько идей для первого вопроса</span></div>
+        <div class="suggestions">
+          <button class="suggestion" data-question="Чем заменить свинину в рационе?"><span class="topic-icon peach">↔</span><span><strong>Найти альтернативу</strong><small>Чем заменить свинину в рационе?</small></span><svg><use href="#chevron"/></svg></button>
+          <button class="suggestion" data-question="Какие продукты богаты белком?"><span class="topic-icon green"><svg><use href="#leaf"/></svg></span><span><strong>Разобраться в продуктах</strong><small>Какие продукты богаты белком?</small></span><svg><use href="#chevron"/></svg></button>
+          <button class="suggestion" data-question="Как собрать сбалансированный обед?"><span class="topic-icon lilac">◷</span><span><strong>Собрать свой рацион</strong><small>Как составить сбалансированный обед?</small></span><svg><use href="#chevron"/></svg></button>
+          <button class="suggestion" data-question="Что выбрать для полезного перекуса?"><span class="topic-icon yellow"><svg><use href="#spark"/></svg></span><span><strong>Начать с малого</strong><small>Что выбрать для полезного перекуса?</small></span><svg><use href="#chevron"/></svg></button>
+        </div>
+        <div class="welcome-footnote"><svg><use href="#book"/></svg> Продукты, привычки и питание — с понятными объяснениями</div>
+      </section>
+      <section class="conversation" id="conversation" role="log" aria-label="Разговор с помощником" aria-live="polite" aria-relevant="additions" hidden></section>
+    </main>
+    <footer class="composer-area">
+      <form id="chat-form" class="composer"><label class="sr-only" for="question">Ваш вопрос о питании</label><textarea id="question" rows="1" maxlength="1000" placeholder="Что вы хотите узнать о питании?"></textarea><div class="composer-bottom"><span><svg><use href="#spark"/></svg> Можно спросить своими словами</span><button id="send" class="send-button" type="submit" aria-label="Отправить вопрос" disabled><svg><use href="#arrow"/></svg></button></div></form>
+      <p class="disclaimer">Демо: ответы и статьи подготовлены заранее. Поиск BM25 и нейросеть не подключены.</p>
+    </footer>
+  </div>
+  <dialog id="source-dialog"><div class="dialog-heading"><span class="dialog-icon"><svg><use href="#book"/></svg></span><button id="close-dialog" class="icon-button" aria-label="Закрыть"><svg><use href="#close"/></svg></button></div><p class="eyebrow">ИСТОЧНИКИ ОТВЕТА</p><h2 id="source-title"></h2><p id="source-description"></p><div class="dialog-notice">Это демонстрационный материал для макета. В рабочей версии здесь будет текст статьи, найденной поиском BM25.</div><button id="dialog-done" class="dialog-done">Понятно</button></dialog>
+</body>
+</html>
