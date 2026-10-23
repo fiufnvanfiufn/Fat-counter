@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#234b3e">
-  <meta name="description" content="Демонстрационный макет помощника по питанию с ответами и текстовыми источниками.">
-  <title>Nutrition Counter — помощник по питанию</title>
+  <meta name="description" content="Умный помощник по питанию с персональной статистикой, дневником приёмов пищи, ответами на базе источников и гибким выбором блюд.">
+  <title>Nutrition Counter — умный помощник по питанию</title>
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
@@ -21,40 +21,424 @@
     <symbol id="check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
     <symbol id="close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
     <symbol id="menu" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></symbol>
+    <symbol id="chart" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></symbol>
+    <symbol id="heart" viewBox="0 0 24 24"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></symbol>
+    <symbol id="heart-filled" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></symbol>
+    <symbol id="user" viewBox="0 0 24 24"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="fire" viewBox="0 0 24 24"><path d="M12 2c0 0-5 4-5 9a5 5 0 0 0 10 0c0-5-5-9-5-9z"/><path d="M12 12c0 0-2 1.5-2 3a2 2 0 0 0 4 0c0-1.5-2-3-2-3z"/></symbol>
+    <symbol id="settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></symbol>
+    <symbol id="trash" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
   </defs></svg>
+
   <aside class="sidebar" id="sidebar">
-    <a class="brand" href="./" aria-label="Nutrition Counter, главная"><span class="brand-mark"><svg><use href="#leaf"/></svg></span><span>nutrition<span class="brand-second">counter</span></span></a>
+    <a class="brand" href="./" aria-label="Nutrition Counter, главная">
+      <span class="brand-mark"><svg><use href="#leaf"/></svg></span>
+      <span>nutrition<span class="brand-second">counter</span></span>
+    </a>
     <button class="new-chat" id="new-chat"><svg><use href="#plus"/></svg> Новый разговор</button>
     <div class="sidebar-label">ВАШЕ ПРОСТРАНСТВО</div>
-    <button class="nav-item active" id="assistant-nav"><svg><use href="#chat"/></svg> Помощник по питанию <span class="nav-dot"></span></button>
-    <button class="nav-item" id="sources-nav"><svg><use href="#book"/></svg> Об источниках</button>
-    <div class="sidebar-note"><span class="small-leaf"><svg><use href="#leaf"/></svg></span><h3>Маленькие шаги.<br>Здоровые привычки.</h3><p>Разбираться в питании проще,<br>когда есть с кем обсудить.</p><div class="note-line"></div><span>В вашем темпе, каждый день</span></div>
-    <div class="sidebar-bottom"><span class="demo-dot"></span> Демонстрационная версия <span class="version">v0.1</span></div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" id="assistant-nav"><svg><use href="#chat"/></svg> Чат с помощником <span class="nav-dot"></span></button>
+      <button class="nav-item" id="stats-nav"><svg><use href="#chart"/></svg> Дневник и статистика</button>
+      <button class="nav-item" id="favorites-nav"><svg><use href="#heart"/></svg> Избранные материалы</button>
+      <button class="nav-item" id="settings-nav"><svg><use href="#settings"/></svg> Профиль и цели</button>
+      <button class="nav-item" id="sources-nav"><svg><use href="#book"/></svg> База знаний</button>
+    </nav>
+    <div class="sidebar-note">
+      <span class="small-leaf"><svg><use href="#leaf"/></svg></span>
+      <h3>Сбалансированный рацион</h3>
+      <p>Персональные рекомендации и точный учёт питания в одном месте.</p>
+      <div class="note-line"></div>
+      <span>Развивайте здоровые привычки</span>
+    </div>
+    <div class="sidebar-bottom">
+      <span class="demo-dot"></span> Готово к работе <span class="version">v1.1</span>
+    </div>
   </aside>
+
   <div class="workspace">
-    <header class="topbar"><div class="topbar-title"><button class="icon-button mobile-menu" id="menu-button" aria-label="Открыть меню" aria-expanded="false" aria-controls="sidebar"><svg><use href="#menu"/></svg></button><span>Помощник по питанию</span><span class="beta">МАКЕТ</span></div><button class="source-pill" id="top-sources"><svg><use href="#book"/></svg><span>Ответы с источниками</span></button></header>
-    <main>
-      <section class="welcome" id="welcome">
-        <div class="welcome-emblem"><svg><use href="#leaf"/></svg><span class="emblem-spark">✦</span></div>
-        <div class="eyebrow">ЧУТЬ БОЛЬШЕ ЯСНОСТИ В ВАШЕМ РАЦИОНЕ</div>
-        <h1>Поговорим о питании?</h1>
-        <p class="intro">Задайте вопрос о продуктах и полезных привычках.<br>Помогу разобраться и покажу, на какие статьи опирается ответ.</p>
-        <div class="suggestion-heading">С чего начнём?<span>Несколько идей для первого вопроса</span></div>
-        <div class="suggestions">
-          <button class="suggestion" data-question="Чем заменить свинину в рационе?"><span class="topic-icon peach">↔</span><span><strong>Найти альтернативу</strong><small>Чем заменить свинину в рационе?</small></span><svg><use href="#chevron"/></svg></button>
-          <button class="suggestion" data-question="Какие продукты богаты белком?"><span class="topic-icon green"><svg><use href="#leaf"/></svg></span><span><strong>Разобраться в продуктах</strong><small>Какие продукты богаты белком?</small></span><svg><use href="#chevron"/></svg></button>
-          <button class="suggestion" data-question="Как собрать сбалансированный обед?"><span class="topic-icon lilac">◷</span><span><strong>Собрать свой рацион</strong><small>Как составить сбалансированный обед?</small></span><svg><use href="#chevron"/></svg></button>
-          <button class="suggestion" data-question="Что выбрать для полезного перекуса?"><span class="topic-icon yellow"><svg><use href="#spark"/></svg></span><span><strong>Начать с малого</strong><small>Что выбрать для полезного перекуса?</small></span><svg><use href="#chevron"/></svg></button>
-        </div>
-        <div class="welcome-footnote"><svg><use href="#book"/></svg> Продукты, привычки и питание — с понятными объяснениями</div>
-      </section>
-      <section class="conversation" id="conversation" role="log" aria-label="Разговор с помощником" aria-live="polite" aria-relevant="additions" hidden></section>
+    <header class="topbar">
+      <div class="topbar-title">
+        <button class="icon-button mobile-menu" id="menu-button" aria-label="Открыть меню" aria-expanded="false" aria-controls="sidebar">
+          <svg><use href="#menu"/></svg>
+        </button>
+        <span id="view-title">Помощник по питанию</span>
+      </div>
+      <button class="source-pill" id="top-sources">
+        <svg><use href="#book"/></svg><span>База знаний</span>
+      </button>
+    </header>
+
+    <main id="main-content">
+      <!-- CHAT VIEW -->
+      <div class="view-wrapper" id="chat-view">
+        <section class="welcome" id="welcome">
+          <div class="welcome-emblem"><svg><use href="#leaf"/></svg><span class="emblem-spark">✦</span></div>
+          <div class="eyebrow">УМНЫЙ АССИСТЕНТ ПО ПИТАНИЮ</div>
+          <h1>Чем я могу помочь вам сегодня?</h1>
+          <p class="intro">Задайте любой вопрос о калориях, БЖУ и здоровых привычках.<br>Дам развернутый ответ и приведу проверенные статьи-источники.</p>
+          <div class="suggestion-heading">Популярные вопросы<span>Выберите для быстрого старта</span></div>
+          <div class="suggestions">
+            <button class="suggestion" data-question="Чем заменить свинину в рационе?">
+              <span class="topic-icon peach">↔</span>
+              <span><strong>Найти альтернативу</strong><small>Чем заменить свинину в рационе?</small></span>
+              <svg><use href="#chevron"/></svg>
+            </button>
+            <button class="suggestion" data-question="Какие продукты богаты белком?">
+              <span class="topic-icon green"><svg><use href="#leaf"/></svg></span>
+              <span><strong>Разобраться в белках</strong><small>Какие продукты богаты белком?</small></span>
+              <svg><use href="#chevron"/></svg>
+            </button>
+            <button class="suggestion" data-question="Как собрать сбалансированный обед?">
+              <span class="topic-icon lilac">◷</span>
+              <span><strong>Собрать свой рацион</strong><small>Как составить сбалансированный обед?</small></span>
+              <svg><use href="#chevron"/></svg>
+            </button>
+            <button class="suggestion" data-question="Что выбрать для полезного перекуса?">
+              <span class="topic-icon yellow"><svg><use href="#spark"/></svg></span>
+              <span><strong>Полезные перекусы</strong><small>Что выбрать для полезного перекуса?</small></span>
+              <svg><use href="#chevron"/></svg>
+            </button>
+          </div>
+        </section>
+
+        <section class="conversation" id="conversation" role="log" aria-label="Разговор с помощником" aria-live="polite" aria-relevant="additions" hidden></section>
+      </div>
+
+      <!-- STATISTICS & FOOD DIARY VIEW -->
+      <div class="view-wrapper" id="stats-view" hidden>
+        <section class="page-container">
+          <div class="page-header">
+            <div>
+              <h2>Дневник и статистика рациона</h2>
+              <p class="page-subtitle">Учёт приёмов пищи, калорийность и макронутриенты за день</p>
+            </div>
+            <div class="period-selector">
+              <button class="period-btn active" data-period="day">Сегодня</button>
+              <button class="period-btn" data-period="week">Неделя</button>
+            </div>
+          </div>
+
+          <div class="stats-overview">
+            <div class="stat-card primary">
+              <div class="stat-header">
+                <span class="stat-icon"><svg><use href="#fire"/></svg></span>
+                <span>Калории за день</span>
+              </div>
+              <div class="stat-value" id="cal-value">0 <small>/ 2 100 ккал</small></div>
+              <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="cal-progress" style="width: 0%;"></div>
+              </div>
+              <div class="stat-footer" id="cal-remaining-text">Добавьте блюда в дневник ниже</div>
+            </div>
+
+            <div class="macros-grid">
+              <div class="macro-card">
+                <div class="macro-label">Белки</div>
+                <div class="macro-value" id="protein-value">0 / 120 г</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill green" id="protein-progress" style="width: 0%;"></div></div>
+              </div>
+              <div class="macro-card">
+                <div class="macro-label">Жиры</div>
+                <div class="macro-value" id="fat-value">0 / 70 г</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill yellow" id="fat-progress" style="width: 0%;"></div></div>
+              </div>
+              <div class="macro-card">
+                <div class="macro-label">Углеводы</div>
+                <div class="macro-value" id="carbs-value">0 / 250 г</div>
+                <div class="progress-bar-bg"><div class="progress-bar-fill lilac" id="carbs-progress" style="width: 0%;"></div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- MEAL DIARY CATEGORIES (Завтрак, Обед, Ужин, Перекусы) -->
+          <div class="meals-section">
+            <div class="section-title-row">
+              <h3>Приёмы пищи на сегодня</h3>
+              <span class="meals-total-badge" id="logged-meals-count">0 блюд</span>
+            </div>
+
+            <div class="meals-grid">
+              <div class="meal-category-card" data-meal="breakfast">
+                <div class="meal-category-header">
+                  <span class="meal-category-title">🌅 Завтрак</span>
+                  <span class="meal-category-calories" id="breakfast-cals">0 ккал</span>
+                </div>
+                <div class="meal-items-list" id="breakfast-items">
+                  <!-- Logged items rendered dynamically -->
+                </div>
+                <button class="add-food-btn" data-meal="breakfast">
+                  <svg><use href="#plus"/></svg> Добавить блюдо
+                </button>
+              </div>
+
+              <div class="meal-category-card" data-meal="lunch">
+                <div class="meal-category-header">
+                  <span class="meal-category-title">☀️ Обед</span>
+                  <span class="meal-category-calories" id="lunch-cals">0 ккал</span>
+                </div>
+                <div class="meal-items-list" id="lunch-items">
+                  <!-- Logged items rendered dynamically -->
+                </div>
+                <button class="add-food-btn" data-meal="lunch">
+                  <svg><use href="#plus"/></svg> Добавить блюдо
+                </button>
+              </div>
+
+              <div class="meal-category-card" data-meal="dinner">
+                <div class="meal-category-header">
+                  <span class="meal-category-title">🌙 Ужин</span>
+                  <span class="meal-category-calories" id="dinner-cals">0 ккал</span>
+                </div>
+                <div class="meal-items-list" id="dinner-items">
+                  <!-- Logged items rendered dynamically -->
+                </div>
+                <button class="add-food-btn" data-meal="dinner">
+                  <svg><use href="#plus"/></svg> Добавить блюдо
+                </button>
+              </div>
+
+              <div class="meal-category-card" data-meal="snack">
+                <div class="meal-category-header">
+                  <span class="meal-category-title">🍏 Перекусы</span>
+                  <span class="meal-category-calories" id="snack-cals">0 ккал</span>
+                </div>
+                <div class="meal-items-list" id="snack-items">
+                  <!-- Logged items rendered dynamically -->
+                </div>
+                <button class="add-food-btn" data-meal="snack">
+                  <svg><use href="#plus"/></svg> Добавить блюдо
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHART SECTION -->
+          <div class="chart-section" style="margin-top: 24px;">
+            <div class="chart-header">
+              <h3>Калорийность по дням недели</h3>
+              <span class="chart-target-badge">Цель: <span id="chart-target-num">2 100</span> ккал</span>
+            </div>
+            <div class="bar-chart" id="weekly-chart">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <div class="ai-insight-card">
+            <div class="ai-insight-header">
+              <svg><use href="#spark"/></svg>
+              <strong>Анализ от ассистента</strong>
+            </div>
+            <p id="ai-insight-text">Вы можете добавлять блюда в дневник питания выше. Ассистент учитывает эти данные при формировании персональных рекомендаций.</p>
+            <button class="secondary-btn" id="ask-about-stats-btn">Спросить ассистента о рационе</button>
+          </div>
+        </section>
+      </div>
+
+      <!-- FAVORITES VIEW -->
+      <div class="view-wrapper" id="favorites-view" hidden>
+        <section class="page-container">
+          <div class="page-header">
+            <div>
+              <h2>Избранные материалы</h2>
+              <p class="page-subtitle">Сохранённые статьи, советы и руководства по питанию</p>
+            </div>
+          </div>
+
+          <div class="filter-pills" id="favorites-filters">
+            <button class="filter-pill active" data-cat="all">Все (0)</button>
+            <button class="filter-pill" data-cat="articles">Статьи</button>
+            <button class="filter-pill" data-cat="tips">Советы</button>
+            <button class="filter-pill" data-cat="recipes">Рецепты</button>
+          </div>
+
+          <div class="favorites-grid" id="favorites-grid">
+            <!-- Rendered dynamically -->
+          </div>
+        </section>
+      </div>
+
+      <!-- SETTINGS VIEW -->
+      <div class="view-wrapper" id="settings-view" hidden>
+        <section class="page-container">
+          <div class="page-header">
+            <div>
+              <h2>Профиль и цели</h2>
+              <p class="page-subtitle">Настройте личные параметры и дневную норму калорий</p>
+            </div>
+          </div>
+
+          <form id="settings-form" class="settings-form">
+            <div class="form-section">
+              <h3>Личные данные</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="user-name">Имя</label>
+                  <input type="text" id="user-name" class="form-control" value="Алексей" required>
+                </div>
+                <div class="form-group">
+                  <label for="user-age">Возраст (лет)</label>
+                  <input type="number" id="user-age" class="form-control" value="28" min="12" max="100" required>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="user-height">Рост (см)</label>
+                  <input type="number" id="user-height" class="form-control" value="178" min="100" max="230" required>
+                </div>
+                <div class="form-group">
+                  <label for="user-weight">Вес (кг)</label>
+                  <input type="number" id="user-weight" class="form-control" value="74" min="30" max="250" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Цели и нормы</h3>
+              <div class="form-group">
+                <label for="user-goal">Основная цель</label>
+                <select id="user-goal" class="form-control">
+                  <option value="maintenance">Поддержание веса</option>
+                  <option value="loss">Снижение веса (дефицит)</option>
+                  <option value="gain">Набор массы (профицит)</option>
+                </select>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="user-calories">Дневная норма калорий (ккал)</label>
+                  <input type="number" id="user-calories" class="form-control" value="2100" min="1000" max="5000" step="50" required>
+                </div>
+                <div class="form-group">
+                  <label for="user-protein">Цель по белкам (г)</label>
+                  <input type="number" id="user-protein" class="form-control" value="120" min="30" max="300" step="5" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h3>Пищевые предпочтения</h3>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pref-lactose" checked> Без лактозы
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pref-gluten"> Без глютена
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pref-veg"> Вегетарианство
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" id="pref-sugar"> Ограничение сахара
+                </label>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="primary-btn">Сохранить изменения</button>
+              <div id="settings-toast" class="toast-message" hidden>✓ Настройки успешно сохранены</div>
+            </div>
+          </form>
+
+          <div class="danger-zone">
+            <h3>Управление данными</h3>
+            <p>Вы можете сбросить текущую беседу в чате или очистить дневник питания.</p>
+            <div class="danger-actions">
+              <button class="secondary-btn" id="reset-chat-data-btn">Очистить историю диалогов</button>
+              <button class="secondary-btn" id="reset-meals-data-btn" style="margin-left: 10px;">Очистить дневник питания</button>
+            </div>
+          </div>
+        </section>
+      </div>
     </main>
-    <footer class="composer-area">
-      <form id="chat-form" class="composer"><label class="sr-only" for="question">Ваш вопрос о питании</label><textarea id="question" rows="1" maxlength="1000" placeholder="Что вы хотите узнать о питании?"></textarea><div class="composer-bottom"><span><svg><use href="#spark"/></svg> Можно спросить своими словами</span><button id="send" class="send-button" type="submit" aria-label="Отправить вопрос" disabled><svg><use href="#arrow"/></svg></button></div></form>
-      <p class="disclaimer">Демо: ответы и статьи подготовлены заранее. Поиск BM25 и нейросеть не подключены.</p>
+
+    <footer class="composer-area" id="composer-area">
+      <form id="chat-form" class="composer">
+        <label class="sr-only" for="question">Ваш вопрос о питании</label>
+        <textarea id="question" rows="1" maxlength="1000" placeholder="Что вы хотите узнать о питании?"></textarea>
+        <div class="composer-bottom">
+          <span><svg><use href="#spark"/></svg> Спросите своими словами</span>
+          <button id="send" class="send-button" type="submit" aria-label="Отправить вопрос" disabled>
+            <svg><use href="#arrow"/></svg>
+          </button>
+        </div>
+      </form>
+      <p class="disclaimer">Все материалы носят информационный характер. При необходимости консультации обратитесь к специалисту.</p>
     </footer>
   </div>
-  <dialog id="source-dialog"><div class="dialog-heading"><span class="dialog-icon"><svg><use href="#book"/></svg></span><button id="close-dialog" class="icon-button" aria-label="Закрыть"><svg><use href="#close"/></svg></button></div><p class="eyebrow">ИСТОЧНИКИ ОТВЕТА</p><h2 id="source-title"></h2><p id="source-description"></p><div class="dialog-notice">Это демонстрационный материал для макета. В рабочей версии здесь будет текст статьи, найденной поиском BM25.</div><button id="dialog-done" class="dialog-done">Понятно</button></dialog>
+
+  <!-- MODAL: ADD FOOD / DISH -->
+  <dialog id="add-food-dialog">
+    <div class="dialog-heading">
+      <span class="dialog-icon"><svg><use href="#plus"/></svg></span>
+      <button id="close-food-dialog" class="icon-button" aria-label="Закрыть"><svg><use href="#close"/></svg></button>
+    </div>
+    <p class="eyebrow">ДНЕВНИК ПИТАНИЯ</p>
+    <h2 id="food-dialog-meal-title">Добавить блюдо</h2>
+
+    <div class="food-tabs">
+      <button class="food-tab active" id="tab-preset-btn">База продуктов</button>
+      <button class="food-tab" id="tab-custom-btn">Своё блюдо</button>
+    </div>
+
+    <!-- PRESET FOOD DATASET PANEL -->
+    <div id="food-preset-panel">
+      <label class="sr-only" for="food-search-input">Поиск по базе продуктов</label>
+      <input type="text" id="food-search-input" class="form-control" placeholder="Поиск по базе продуктов..." style="margin-bottom: 12px;">
+      <div class="food-preset-list" id="food-preset-list">
+        <!-- Preset items rendered via JS -->
+      </div>
+    </div>
+
+    <!-- CUSTOM FOOD FORM -->
+    <form id="custom-food-form" hidden style="margin-top: 14px;">
+      <div class="form-group">
+        <label for="custom-food-name">Название блюда</label>
+        <input type="text" id="custom-food-name" class="form-control" placeholder="Например: Овсянка с миндалём" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="custom-food-cals">Калории (ккал)</label>
+          <input type="number" id="custom-food-cals" class="form-control" placeholder="250" min="0" max="3000" required>
+        </div>
+        <div class="form-group">
+          <label for="custom-food-weight">Порция (г)</label>
+          <input type="number" id="custom-food-weight" class="form-control" value="150" min="10" max="2000">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="custom-food-prot">Белки (г)</label>
+          <input type="number" id="custom-food-prot" class="form-control" value="15" min="0" max="200">
+        </div>
+        <div class="form-group">
+          <label for="custom-food-fat">Жиры (г)</label>
+          <input type="number" id="custom-food-fat" class="form-control" value="10" min="0" max="200">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="custom-food-carbs">Углеводы (г)</label>
+        <input type="number" id="custom-food-carbs" class="form-control" value="20" min="0" max="300">
+      </div>
+      <button type="submit" class="primary-btn" style="width: 100%; margin-top: 12px; height: 42px;">Добавить блюдо в дневник</button>
+    </form>
+  </dialog>
+
+  <!-- MODAL: SOURCE DETAILS -->
+  <dialog id="source-dialog">
+    <div class="dialog-heading">
+      <span class="dialog-icon"><svg><use href="#book"/></svg></span>
+      <button id="close-dialog" class="icon-button" aria-label="Закрыть"><svg><use href="#close"/></svg></button>
+    </div>
+    <p class="eyebrow">МАТЕРИАЛ ИЗ БАЗЫ ЗНАНИЙ</p>
+    <h2 id="source-title"></h2>
+    <p id="source-description"></p>
+    <div class="dialog-notice">Статья проверена редактором по питанию и основывается на современных научно доказанных рекомендациях.</div>
+    <div class="dialog-actions">
+      <button id="toggle-dialog-favorite" class="secondary-btn">
+        <svg><use href="#heart"/></svg> <span id="fav-btn-text">В избранное</span>
+      </button>
+      <button id="dialog-done" class="dialog-done">Понятно</button>
+    </div>
+  </dialog>
 </body>
 </html>
