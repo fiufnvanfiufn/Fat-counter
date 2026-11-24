@@ -47,12 +47,12 @@
     <div class="sidebar-note">
       <span class="small-leaf"><svg><use href="#leaf"/></svg></span>
       <h3>Сбалансированный рацион</h3>
-      <p>Персональные рекомендации и точный учёт питания в одном месте.</p>
+      <p>Ответы по материалам базы знаний и дневник питания в одном месте.</p>
       <div class="note-line"></div>
       <span>Развивайте здоровые привычки</span>
     </div>
     <div class="sidebar-bottom">
-      <span class="demo-dot"></span> Готово к работе <span class="version">v1.1</span>
+      <span class="demo-dot"></span> Помощник по источникам <span class="version">v1.2</span>
     </div>
   </aside>
 
@@ -64,7 +64,7 @@
         </button>
         <span id="view-title">Помощник по питанию</span>
       </div>
-      <button class="source-pill" id="top-sources">
+      <button class="source-pill" id="top-sources" aria-label="Открыть базу знаний">
         <svg><use href="#book"/></svg><span>База знаний</span>
       </button>
     </header>
@@ -76,7 +76,7 @@
           <div class="welcome-emblem"><svg><use href="#leaf"/></svg><span class="emblem-spark">✦</span></div>
           <div class="eyebrow">УМНЫЙ АССИСТЕНТ ПО ПИТАНИЮ</div>
           <h1>Чем я могу помочь вам сегодня?</h1>
-          <p class="intro">Задайте любой вопрос о калориях, БЖУ и здоровых привычках.<br>Дам развернутый ответ и приведу проверенные статьи-источники.</p>
+          <p class="intro">Спросите о продуктах и здоровых привычках.<br>Найду подходящие материалы и покажу источники ответа.</p>
           <div class="suggestion-heading">Популярные вопросы<span>Выберите для быстрого старта</span></div>
           <div class="suggestions">
             <button class="suggestion" data-question="Чем заменить свинину в рационе?">
@@ -229,9 +229,29 @@
               <svg><use href="#spark"/></svg>
               <strong>Анализ от ассистента</strong>
             </div>
-            <p id="ai-insight-text">Вы можете добавлять блюда в дневник питания выше. Ассистент учитывает эти данные при формировании персональных рекомендаций.</p>
+            <p id="ai-insight-text">Сравните записанные калории и БЖУ с вашими заданными целями. Это обзор записей, а не назначение персональной нормы питания.</p>
+            <p class="diary-share-notice">По нажатию записанные блюда, итоги калорий/БЖУ и заданные цели будут отправлены Gemini для анализа.</p>
             <button class="secondary-btn" id="ask-about-stats-btn">Спросить ассистента о рационе</button>
+            <p id="diary-analysis-status" class="diary-analysis-status" role="status" hidden></p>
           </div>
+        </section>
+      </div>
+
+      <!-- KNOWLEDGE VIEW -->
+      <div class="view-wrapper" id="knowledge-view" hidden>
+        <section class="page-container">
+          <div class="page-header">
+            <div>
+              <h2>База знаний</h2>
+              <p class="page-subtitle">Все материалы, по которым помощник ищет ответы. Сохранять их в избранное необязательно.</p>
+            </div>
+          </div>
+          <div class="knowledge-toolbar">
+            <label for="knowledge-search">Найти материал</label>
+            <input type="search" id="knowledge-search" class="form-control" placeholder="Название, слово из текста или ID, например D08" autocomplete="off">
+            <p id="knowledge-status" class="knowledge-status" role="status" aria-live="polite">Загружаю материалы базы знаний…</p>
+          </div>
+          <div class="favorites-grid knowledge-grid" id="knowledge-grid" aria-busy="false"></div>
         </section>
       </div>
 
@@ -352,9 +372,10 @@
     </main>
 
     <footer class="composer-area" id="composer-area">
+      <p class="chat-status" id="chat-status" role="status">Проверяю подключение к помощнику…</p>
       <form id="chat-form" class="composer">
         <label class="sr-only" for="question">Ваш вопрос о питании</label>
-        <textarea id="question" rows="1" maxlength="1000" placeholder="Что вы хотите узнать о питании?"></textarea>
+        <textarea id="question" rows="1" maxlength="2000" placeholder="Что вы хотите узнать о питании?"></textarea>
         <div class="composer-bottom">
           <span><svg><use href="#spark"/></svg> Спросите своими словами</span>
           <button id="send" class="send-button" type="submit" aria-label="Отправить вопрос" disabled>
@@ -362,6 +383,7 @@
           </button>
         </div>
       </form>
+      <p class="chat-privacy">В режиме Gemini вопрос и найденные фрагменты отправляются Google. Записи дневника и заданные цели передаются только по кнопке анализа рациона.</p>
       <p class="disclaimer">Все материалы носят информационный характер. При необходимости консультации обратитесь к специалисту.</p>
     </footer>
   </div>
@@ -424,15 +446,19 @@
   </dialog>
 
   <!-- MODAL: SOURCE DETAILS -->
-  <dialog id="source-dialog">
+  <dialog id="source-dialog" aria-labelledby="source-title">
     <div class="dialog-heading">
       <span class="dialog-icon"><svg><use href="#book"/></svg></span>
       <button id="close-dialog" class="icon-button" aria-label="Закрыть"><svg><use href="#close"/></svg></button>
     </div>
     <p class="eyebrow">МАТЕРИАЛ ИЗ БАЗЫ ЗНАНИЙ</p>
     <h2 id="source-title"></h2>
+    <p id="source-metadata" class="source-metadata"></p>
     <p id="source-description"></p>
-    <div class="dialog-notice">Статья проверена редактором по питанию и основывается на современных научно доказанных рекомендациях.</div>
+    <a id="source-original" class="source-original" target="_blank" rel="noopener noreferrer" hidden>Открыть оригинал статьи ↗</a>
+    <div id="source-excerpts" class="source-excerpts"></div>
+    <details class="source-full-text" id="source-full-text"><summary>Конспект в локальной базе</summary><div id="source-content"></div></details>
+    <div class="dialog-notice" id="source-notice"></div>
     <div class="dialog-actions">
       <button id="toggle-dialog-favorite" class="secondary-btn">
         <svg><use href="#heart"/></svg> <span id="fav-btn-text">В избранное</span>

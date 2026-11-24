@@ -4,4 +4,7 @@
 fat_counter.db
 fat_counter.db-wal
 fat_counter.db-shm
+.env.*
+!.env.example
+!.env
 

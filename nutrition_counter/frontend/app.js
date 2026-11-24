@@ -7,8 +7,14 @@ async function apiFetch(path, options = {}) {
     ...options,
   });
   if (!res.ok && res.status !== 204) {
-    const text = await res.text();
-    throw new Error(`API error ${res.status}: ${text}`);
+    const payload = await res.json().catch(() => null);
+    const detail = payload?.detail;
+    const message = typeof detail === 'string' ? detail : detail?.message;
+    const error = new Error(message || (res.status === 422
+      ? 'Проверьте вопрос: он должен содержать от 1 до 2000 символов.'
+      : `Сервер не смог обработать запрос (HTTP ${res.status}).`));
+    error.status = res.status;
+    throw error;
   }
   if (res.status === 204) return null;
   return res.json();
@@ -40,8 +46,12 @@ async function apiDeleteAllMeals() {
   return apiFetch('/api/meals', { method: 'DELETE' });
 }
 
-async function apiGetSources() {
-  return apiFetch('/api/sources');
+async function apiGetSources(signal) {
+  return apiFetch('/api/sources', { signal });
+}
+
+async function apiGetKnowledge() {
+  return apiFetch('/api/knowledge');
 }
 
 async function apiToggleBookmark(sourceId, bookmarked) {
@@ -56,11 +66,13 @@ async function apiGetFoods(query = '') {
   return apiFetch(`/api/foods${params}`);
 }
 
-async function apiChat(question) {
-  return apiFetch('/api/chat', { method: 'POST', body: JSON.stringify({ question }) });
+async function apiChat(question, signal, options = {}) {
+  const scope = options.scope === 'diary' ? 'diary' : 'general';
+  return apiFetch('/api/chat', { method: 'POST', body: JSON.stringify({ question, scope }), signal });
 }
 
-// KNOWLEDGE BASE & MOCK DATA (kept for initial fallback; sources now come from API)
+// Knowledge articles and retrieval results come from the backend.
+const sourcePassages = new Map();
 
 // FOOD DATASET — now loaded from API
 let FOOD_DATASET = [];
@@ -79,21 +91,25 @@ let activeTargetMeal = 'breakfast';
 let currentView = 'chat';
 let pending = false;
 let generation = 0;
-let responseTimer;
+let activeChatController = null;
+let initialDataLoaded = false;
+const knowledgeCatalog = { state: 'idle', ids: [], error: '', promise: null };
 
 // DOM ELEMENT REFERENCES
 const views = {
   chat: document.querySelector('#chat-view'),
   stats: document.querySelector('#stats-view'),
   favorites: document.querySelector('#favorites-view'),
-  settings: document.querySelector('#settings-view')
+  settings: document.querySelector('#settings-view'),
+  knowledge: document.querySelector('#knowledge-view')
 };
 
 const navButtons = {
   chat: document.querySelector('#assistant-nav'),
   stats: document.querySelector('#stats-nav'),
   favorites: document.querySelector('#favorites-nav'),
-  settings: document.querySelector('#settings-nav')
+  settings: document.querySelector('#settings-nav'),
+  knowledge: document.querySelector('#sources-nav')
 };
 
 const form = document.querySelector('#chat-form');
@@ -147,7 +163,8 @@ function switchView(target) {
     chat: 'Чат с помощником',
     stats: 'Дневник и статистика',
     favorites: 'Избранные материалы',
-    settings: 'Профиль и цели'
+    settings: 'Профиль и цели',
+    knowledge: 'База знаний'
   };
   if (viewTitle) viewTitle.textContent = titles[target] || 'Помощник по питанию';
 
@@ -160,22 +177,158 @@ function switchView(target) {
   if (target === 'stats') updateStatsUI();
   if (target === 'favorites') renderFavoritesUI('all');
   if (target === 'settings') fillSettingsForm();
+  if (target === 'knowledge') loadKnowledgeCatalog();
 }
 
 // SOURCE DIALOG & FAVORITES
-function showSourceModal(id) {
+function showSourceModal(id, expandContent = false) {
   const source = sources[id];
   if (!source) return;
   activeDialogSourceId = id;
 
   document.querySelector('#source-title').textContent = source.title;
   document.querySelector('#source-description').textContent = source.description;
+  const metadata = [source.id, source.publisher, source.updated_at && `Проверено: ${source.updated_at}`].filter(Boolean);
+  document.querySelector('#source-metadata').textContent = metadata.join(' · ');
+  const link = document.querySelector('#source-original');
+  const url = safeSourceUrl(source.url);
+  link.hidden = !url;
+  if (url) link.href = url;
+  else link.removeAttribute('href');
+  const content = document.querySelector('#source-content');
+  content.textContent = source.content || '';
+  content.hidden = !source.content;
+  document.querySelector('#source-full-text').open = expandContent;
+  const excerpts = document.querySelector('#source-excerpts');
+  excerpts.replaceChildren();
+  const passages = sourcePassages.get(id) || [];
+  if (passages.length) {
+    excerpts.append(element('h3', '', 'Фрагменты, найденные в этой беседе'));
+    passages.forEach(passage => excerpts.append(element('blockquote', '', passage.text)));
+  }
+  document.querySelector('#source-notice').textContent = url
+    ? 'Текст в базе — краткий русскоязычный конспект по материалу указанного издателя. Оригинал доступен по ссылке.'
+    : 'Это материал прежней демонстрационной версии. Проверяемая ссылка на публикацию не указана.';
 
   const favBtnText = document.querySelector('#fav-btn-text');
   if (favBtnText) favBtnText.textContent = source.bookmarked ? 'В избранном' : 'В избранное';
 
   closeMenu();
   dialog.showModal();
+}
+
+// KNOWLEDGE CATALOG — independent from the user's saved favorites.
+function knowledgeSearchText(source) {
+  return [source.id, source.title, source.description, source.publisher, source.content]
+    .filter(Boolean).join(' ').normalize('NFKC').toLocaleLowerCase('ru').replaceAll('ё', 'е');
+}
+
+function knowledgeMatches(source, query) {
+  const terms = query.trim().normalize('NFKC').toLocaleLowerCase('ru').replaceAll('ё', 'е').split(/\s+/).filter(Boolean);
+  const text = knowledgeSearchText(source);
+  return terms.every(term => text.includes(term));
+}
+
+function renderKnowledgeCatalog() {
+  const grid = document.querySelector('#knowledge-grid');
+  const status = document.querySelector('#knowledge-status');
+  const search = document.querySelector('#knowledge-search');
+  grid.replaceChildren();
+  grid.setAttribute('aria-busy', String(knowledgeCatalog.state === 'loading'));
+  if (knowledgeCatalog.state === 'loading' || knowledgeCatalog.state === 'idle') {
+    status.textContent = 'Загружаю материалы базы знаний…';
+    return;
+  }
+  if (knowledgeCatalog.state === 'error') {
+    status.textContent = 'Не удалось загрузить базу знаний.';
+    const empty = element('div', 'empty-state');
+    empty.setAttribute('role', 'alert');
+    empty.append(element('h3', '', 'Материалы пока недоступны'), element('p', '', knowledgeCatalog.error));
+    const retry = element('button', 'primary-btn', 'Повторить загрузку');
+    retry.type = 'button';
+    retry.addEventListener('click', () => loadKnowledgeCatalog(true));
+    empty.append(retry); grid.append(empty);
+    return;
+  }
+  const articles = knowledgeCatalog.ids.map(id => sources[id]).filter(Boolean);
+  const items = articles.filter(source => knowledgeMatches(source, search.value));
+  status.textContent = `Показано ${items.length} из ${articles.length} материалов`;
+  if (!items.length) {
+    const empty = element('div', 'empty-state');
+    empty.append(element('h3', '', articles.length ? 'Ничего не найдено' : 'В базе пока нет материалов'),
+      element('p', '', articles.length ? 'Попробуйте другое название, слово или ID документа, например D08.' : 'Добавьте документы в корпус и перезапустите сервер.'));
+    grid.append(empty);
+    return;
+  }
+  const categoryNames = { articles: 'Статья', tips: 'Совет', recipes: 'Рецепт' };
+  items.forEach(source => {
+    const card = element('article', 'favorite-card knowledge-card');
+    card.append(element('span', 'favorite-badge', `${source.id} · ${categoryNames[source.category] || 'Материал'}`),
+      element('h3', '', source.title), element('small', 'knowledge-publisher', source.publisher || ''),
+      element('p', '', source.description));
+    const actions = element('div', 'favorite-card-actions');
+    const read = element('button', 'secondary-btn', 'Открыть материал');
+    read.type = 'button';
+    read.setAttribute('aria-label', `Открыть ${source.id}: ${source.title}`);
+    read.addEventListener('click', () => showSourceModal(source.id, true));
+    const save = element('button', 'knowledge-save-button' + (source.bookmarked ? ' active' : ''), source.bookmarked ? 'Сохранено' : 'В избранное');
+    save.type = 'button';
+    save.setAttribute('aria-pressed', String(!!source.bookmarked));
+    save.setAttribute('aria-label', `В избранное: ${source.title}`);
+    save.addEventListener('click', async () => {
+      save.disabled = true;
+      try {
+        await toggleSourceBookmark(source.id, save);
+        save.textContent = sources[source.id].bookmarked ? 'Сохранено' : 'В избранное';
+        save.setAttribute('aria-pressed', String(!!sources[source.id].bookmarked));
+      } finally { save.disabled = false; }
+    });
+    actions.append(read, save); card.append(actions); grid.append(card);
+  });
+}
+
+async function loadKnowledgeCatalog(force = false) {
+  if (knowledgeCatalog.promise) return knowledgeCatalog.promise;
+  if (knowledgeCatalog.state === 'ready' && !force) { renderKnowledgeCatalog(); return; }
+  knowledgeCatalog.state = 'loading'; knowledgeCatalog.error = ''; renderKnowledgeCatalog();
+  knowledgeCatalog.promise = (async () => {
+    try {
+      const articles = await apiGetKnowledge();
+      articles.forEach(source => { sources[source.id] = source; });
+      knowledgeCatalog.ids = articles.map(source => source.id);
+      knowledgeCatalog.state = 'ready';
+    } catch (error) {
+      knowledgeCatalog.state = 'error';
+      knowledgeCatalog.error = error instanceof TypeError ? 'Проверьте, что backend запущен, и повторите попытку.' : error.message;
+    } finally {
+      knowledgeCatalog.promise = null;
+      renderKnowledgeCatalog();
+    }
+  })();
+  return knowledgeCatalog.promise;
+}
+
+function safeSourceUrl(value) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'https:' ? url.href : null;
+  } catch { return null; }
+}
+
+async function loadChatStatus() {
+  const node = document.querySelector('#chat-status');
+  try {
+    const status = await apiFetch('/api/chat/status');
+    node.textContent = status.configured
+      ? `Gemini настроен · поиск по ${status.documents} статьям`
+      : `Поиск по ${status.documents} статьям · LLM не настроена, доступны выдержки`;
+    node.dataset.state = status.configured ? 'connected' : 'retrieval';
+    node.title = status.configured ? `Модель: ${status.model}. Доступ к API проверяется при отправке вопроса.`
+      : 'Для генерации ответов добавьте GEMINI_API_KEY в серверный .env и перезапустите backend.';
+  } catch {
+    node.textContent = 'Не удалось проверить подключение к помощнику';
+    node.dataset.state = 'error';
+  }
 }
 
 async function toggleSourceBookmark(id, buttonEl) {
@@ -442,6 +595,9 @@ function switchFoodTab(tabName) {
 // CHAT RENDER & LOGIC
 function syncInput() {
   send.disabled = pending || !input.value.trim();
+  const diaryButton = document.querySelector('#ask-about-stats-btn');
+  diaryButton.disabled = pending;
+  diaryButton.textContent = pending ? 'Дождитесь ответа в чате…' : 'Спросить ассистента о рационе';
   input.style.height = 'auto';
   input.style.height = `${Math.min(input.scrollHeight, 140)}px`;
 }
@@ -467,30 +623,46 @@ function scrollToMessage(msg) {
   });
 }
 
-function addAnswer(mock) {
+function addAnswer(answer) {
   const message = assistantMessage();
+  const modeLabel = message.querySelector('.mock-tag');
+  modeLabel.textContent = answer.mode === 'gemini' ? 'GEMINI + ИСТОЧНИКИ'
+    : answer.mode === 'retrieval' ? 'НАЙДЕННЫЕ ФРАГМЕНТЫ' : 'НЕДОСТАТОЧНО МАТЕРИАЛОВ';
   const body = element('div', 'answer-body');
-  body.append(element('p', '', mock.intro));
+  if (answer.diary_summary) {
+    const summary = answer.diary_summary;
+    const snapshot = element('section', 'diary-reply-summary');
+    snapshot.setAttribute('aria-label', 'Сводка записанного рациона');
+    const number = value => Number.isFinite(Number(value)) ? Number(value).toLocaleString('ru-RU', { maximumFractionDigits: 1 }) : '—';
+    snapshot.append(element('strong', '', `По записям дневника: ${number(summary.record_count)} блюд`),
+      element('p', '', `Калории: ${number(summary.totals?.calories)} / ${number(summary.targets?.calories)} ккал · Белки: ${number(summary.totals?.protein)} / ${number(summary.targets?.protein)} г`),
+      element('p', '', `Жиры: ${number(summary.totals?.fat)} г · Углеводы: ${number(summary.totals?.carbs)} г`));
+    if (summary.scope_note) snapshot.append(element('small', '', summary.scope_note));
+    body.append(snapshot);
+  }
+  body.append(element('p', '', answer.intro));
 
   const list = element('ul');
-  mock.items.forEach(item => list.append(element('li', '', item)));
-  body.append(list, element('p', '', mock.end));
+  answer.items.forEach(item => list.append(element('li', '', item)));
+  if (answer.items.length) body.append(list);
+  body.append(element('p', '', answer.end));
+  if (answer.warning) body.append(element('p', 'chat-warning', answer.warning));
 
   const heading = element('div', 'source-heading');
-  heading.append(icon('book'), element('span', '', 'Источники ответа · ' + mock.sources.length));
+  heading.append(icon('book'), element('span', '', 'Источники ответа · ' + answer.sources.length));
 
   const cards = element('div', 'source-cards');
-  mock.sources.forEach((id, index) => {
+  answer.sources.forEach((id, index) => {
     const source = sources[id];
     if (!source) return;
 
     const card = element('div', 'source-card');
     const num = element('span', 'source-number', `0${index + 1}`);
 
-    const content = element('div', 'source-card-content');
-    content.append(element('strong', '', source.title), element('small', '', 'Нажмите для просмотра деталей'));
+    const content = element('button', 'source-card-content');
+    content.type = 'button';
+    content.append(element('strong', '', source.title), element('small', '', source.publisher || 'Открыть материал и фрагменты'));
     content.addEventListener('click', () => showSourceModal(id));
-    content.style.cursor = 'pointer';
 
     const favBtn = element('button', 'source-fav-btn' + (source.bookmarked ? ' active' : ''));
     favBtn.type = 'button';
@@ -505,18 +677,45 @@ function addAnswer(mock) {
     cards.append(card);
   });
 
-  body.append(heading, cards, element('p', 'answer-note', 'Ответ сформирован по базе знаний ассистента.'));
+  if (answer.sources.length) body.append(heading, cards);
+  const passages = answer.passages || [];
+  if (passages.length) {
+    const details = element('details', 'retrieval-details');
+    details.append(element('summary', '', 'Посмотреть найденные фрагменты'));
+    passages.forEach(passage => {
+      const section = element('div', 'retrieval-passage');
+      section.append(element('strong', '', passage.title), element('blockquote', '', passage.text));
+      details.append(section);
+    });
+    body.append(details);
+  }
+  body.append(element('p', 'answer-note', answer.mode === 'gemini'
+    ? `Ответ сформирован ${answer.model || 'Gemini'} по указанным фрагментам. Ответ может содержать ошибки — проверяйте источники.`
+    : answer.mode === 'retrieval'
+      ? 'Показаны выдержки из локальной базы. Генерация ответа нейросетью не выполнялась.'
+      : 'В локальной базе не найдено достаточно материалов для ответа.'));
   message.append(body);
   conversation.append(message);
   scrollToMessage(message);
 }
 
-async function ask(question) {
-  if (pending || !question.trim()) return;
+async function ask(question, options = {}) {
+  if (pending) { switchView('chat'); return; }
+  if (!question.trim()) return;
+  const requestScope = options.scope === 'diary' ? 'diary' : 'general';
+  if (question.trim().length > 2000) {
+    input.setCustomValidity('Сократите вопрос до 2000 символов.');
+    input.reportValidity();
+    return;
+  }
 
   switchView('chat');
   pending = true;
   const request = ++generation;
+  const controller = new AbortController();
+  activeChatController = controller;
+  let timedOut = false;
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 45000);
 
   closeMenu();
   welcome.hidden = true;
@@ -532,7 +731,7 @@ async function ask(question) {
   const dots = element('span', 'typing-dots');
   dots.setAttribute('aria-hidden', 'true');
   dots.append(element('i'), element('i'), element('i'));
-  status.append(dots, element('span', '', 'Готовлю развернутый ответ…'));
+  status.append(dots, element('span', '', 'Ищу материалы и готовлю ответ…'));
   loading.append(status);
   conversation.append(loading);
 
@@ -544,31 +743,59 @@ async function ask(question) {
   scrollToMessage(user);
 
   try {
-    const mock = await apiChat(question);
+    const answer = await apiChat(question.trim(), controller.signal, { scope: requestScope });
     if (request !== generation) return;
+    // Sources normally arrive at startup. Refresh if the corpus changed meanwhile.
+    if (answer.sources.some(id => !sources[id])) {
+      const refreshed = await apiGetSources(controller.signal);
+      if (request !== generation) return;
+      refreshed.forEach(source => { sources[source.id] = source; });
+    }
+    (answer.passages || []).forEach(passage => {
+      const group = sourcePassages.get(passage.source_id) || [];
+      if (!group.some(existing => existing.chunk_id === passage.chunk_id)) group.push(passage);
+      sourcePassages.set(passage.source_id, group);
+    });
     loading.remove();
-    addAnswer(mock);
+    addAnswer(answer);
   } catch (e) {
-    console.error('Chat error:', e);
     if (request !== generation) return;
     loading.remove();
     const errMsg = assistantMessage();
-    errMsg.append(element('p', 'answer-body', 'Не удалось получить ответ. Попробуйте ещё раз.'));
+    const body = element('div', 'answer-body chat-error');
+    body.setAttribute('role', 'alert');
+    const text = timedOut ? 'Ответ не получен за 45 секунд. Попробуйте повторить запрос.'
+      : e instanceof TypeError ? 'Не удалось связаться с сервером. Проверьте подключение и запуск backend.'
+      : e.message || 'Не удалось получить ответ. Попробуйте ещё раз.';
+    body.append(element('p', '', text));
+    const retry = element('button', 'secondary-btn', 'Повторить вопрос');
+    retry.type = 'button';
+    retry.addEventListener('click', () => { if (!pending) { retry.disabled = true; ask(question, { scope: requestScope }); } });
+    body.append(retry);
+    errMsg.append(body);
     conversation.append(errMsg);
+    scrollToMessage(errMsg);
   } finally {
-    pending = false;
-    input.disabled = false;
-    conversation.setAttribute('aria-busy', 'false');
-    syncInput();
-    document.querySelectorAll('.suggestion').forEach(btn => btn.disabled = false);
-    input.focus({ preventScroll: true });
+    clearTimeout(timeout);
+    // A cancelled request must never unlock a newer request after reset.
+    if (request === generation) {
+      activeChatController = null;
+      pending = false;
+      input.disabled = false;
+      conversation.setAttribute('aria-busy', 'false');
+      syncInput();
+      document.querySelectorAll('.suggestion').forEach(btn => btn.disabled = false);
+      if (currentView === 'chat') input.focus({ preventScroll: true });
+    }
   }
 }
 
 function resetChat() {
   generation++;
-  clearTimeout(responseTimer);
+  activeChatController?.abort();
+  activeChatController = null;
   pending = false;
+  sourcePassages.clear();
   conversation.replaceChildren();
   conversation.hidden = true;
   conversation.removeAttribute('aria-busy');
@@ -689,7 +916,7 @@ if (settingsForm) {
 }
 
 // EVENT LISTENERS & INITIALIZATION
-input.addEventListener('input', syncInput);
+input.addEventListener('input', () => { input.setCustomValidity(''); syncInput(); });
 input.addEventListener('keydown', event => {
   if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) {
     event.preventDefault();
@@ -712,8 +939,9 @@ navButtons.stats.addEventListener('click', () => switchView('stats'));
 navButtons.favorites.addEventListener('click', () => switchView('favorites'));
 navButtons.settings.addEventListener('click', () => switchView('settings'));
 
-document.querySelector('#sources-nav').addEventListener('click', () => switchView('favorites'));
-document.querySelector('#top-sources').addEventListener('click', () => switchView('favorites'));
+navButtons.knowledge.addEventListener('click', () => switchView('knowledge'));
+document.querySelector('#top-sources').addEventListener('click', () => switchView('knowledge'));
+document.querySelector('#knowledge-search').addEventListener('input', renderKnowledgeCatalog);
 
 // Dialog controls
 document.querySelector('#close-dialog').addEventListener('click', () => dialog.close());
@@ -803,7 +1031,15 @@ document.addEventListener('click', event => {
 const askAboutStatsBtn = document.querySelector('#ask-about-stats-btn');
 if (askAboutStatsBtn) {
   askAboutStatsBtn.addEventListener('click', () => {
-    ask('Как распределить мой дневной калораж для более эффективного достижения цели?');
+    if (pending) { switchView('chat'); return; }
+    const notice = document.querySelector('#diary-analysis-status');
+    if (initialDataLoaded && !loggedMeals.length) {
+      notice.hidden = false;
+      notice.textContent = 'Сначала добавьте хотя бы одно блюдо в дневник. Тогда ассистент сможет сравнить записанные калории и БЖУ с заданными целями.';
+      return;
+    }
+    notice.hidden = true;
+    ask('Проанализируй мой записанный рацион: сравни калории и БЖУ с заданными целями и подскажи, на что обратить внимание.', { scope: 'diary' });
   });
 }
 
@@ -841,6 +1077,7 @@ if (favFiltersContainer) {
 
 // ── INITIAL APP LOAD (async from API) ──
 async function initApp() {
+  loadChatStatus();
   try {
     // Load all data from backend in parallel
     const [profileData, mealsData, sourcesData, foodsData] = await Promise.all([
@@ -854,15 +1091,15 @@ async function initApp() {
     loggedMeals = mealsData;
 
     // Convert sources array to object keyed by id
-    sources = {};
-    sourcesData.forEach(s => { sources[s.id] = s; });
+    sourcesData.forEach(s => { if (!sources[s.id]) sources[s.id] = s; });
 
     FOOD_DATASET = foodsData;
+    initialDataLoaded = true;
   } catch (e) {
     console.error('Failed to load data from API, app may not work correctly:', e);
   }
 
-  switchView('chat');
+  switchView(currentView);
   syncInput();
 }
 

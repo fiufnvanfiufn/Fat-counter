@@ -1,18 +1,23 @@
-﻿"""FastAPI application for the Fat-counter nutrition tracker."""
+"""FastAPI application for the Fat-counter nutrition tracker."""
 
 from __future__ import annotations
 
-import re
+import asyncio
 import uuid
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+from fastapi.requests import Request
 
-from database import get_db, init_db
+from config import load_settings
+from database import get_db, init_db, sync_articles, get_diary_context
+from llm import LLMError
+from rag import RagService
+from retrieval import BM25Index, load_articles
 from schemas import (
     ChatRequest,
     ChatResponse,
@@ -25,92 +30,27 @@ from schemas import (
     SourceRead,
 )
 
-# ── Mock responses (moved from frontend) ──
-
-MOCK_RESPONSES = {
-    "alternatives": {
-        "intro": "В качестве замены свинине можно рассмотреть несколько отличных продуктов — выбор зависит от конкретного блюда и ваших целей:",
-        "items": [
-            "Птица (курица, индейка) — диетический источник белка с низким содержанием насыщенных жиров.",
-            "Рыба и морепродукты — обогащают рацион Омега-3 жирными кислотами.",
-            "Чечевица, фасоль и нут — растительные альтернативы с высоким содержанием клетчатки.",
-        ],
-        "end": "Попробуйте начать с замены в одном любимом блюде (например, приготовьте рагу с индейкой или нутом).",
-        "sources": ["alternatives", "protein"],
-    },
-    "protein": {
-        "intro": "Белок необходимо получать из разнообразных источников для полноценного набора аминокислот:",
-        "items": [
-            "Животные источники: филе индейки/курицы, нежирная рыба, творог 2-5%, яйца.",
-            "Растительные источники: чечевица, маш, нут, тофу и цельнозерновые крупы.",
-            "Орехи и семена — как дополнение к основным блюдам.",
-        ],
-        "end": "Оптимально распределять белок равномерно между 3–4 приёмами пищи в течение дня.",
-        "sources": ["protein", "plate"],
-    },
-    "plate": {
-        "intro": "Для сборки сбалансированного приёма пищи используйте проверенное правило гарвардской тарелки:",
-        "items": [
-            "1/2 тарелки: свежие или тушёные овощи, зелень, салатные листья.",
-            "1/4 тарелки: нежирный белок (рыба, птица, бобовые, яйца).",
-            "1/4 тарелки: сложные углеводы (гречка, бурый рис, киноа, цельнозерновые макароны).",
-        ],
-        "end": "Добавьте 1 чайную ложку полезного растительного масла (оливковое, льняное) для заправки.",
-        "sources": ["plate", "habits"],
-    },
-    "snacks": {
-        "intro": "Полезный перекус должен сочетать сложные углеводы или клетчатку с белком:",
-        "items": [
-            "Натуральный греческий йогурт + горсть свежих ягод.",
-            "Яблоко или дольки груши + 15–20 г сырого миндаля.",
-            "Цельнозерновой тост + паста из авокадо или хумус.",
-        ],
-        "end": "Такие сочетания обеспечивают долгую сытость без резких скачков сахара в крови.",
-        "sources": ["snacks", "habits"],
-    },
-    "general": {
-        "intro": "Спасибо за вопрос! Чтобы составить правильный рацион, придерживайтесь базовых ориентиров:",
-        "items": [
-            "Разнообразие: включайте продукты разных цветов и групп каждый день.",
-            "Регулярность: питайтесь каждые 3.5–4.5 часа без длительного голодания.",
-            "Гидратация: поддерживайте питьевой режим в течение дня.",
-        ],
-        "end": "Задайте более конкретный вопрос — например: «Какие продукты богаты белком?» или «Как собрать сбалансированный обед?».",
-        "sources": ["plate", "habits"],
-    },
-}
-
-
-def select_mock(question: str) -> dict:
-    q = question.lower()
-    if re.search(r"свинин|замен|альтернатив", q):
-        return MOCK_RESPONSES["alternatives"]
-    if re.search(r"бел[ко]|протеин", q):
-        return MOCK_RESPONSES["protein"]
-    if re.search(r"обед|сбаланс|тарелк", q):
-        return MOCK_RESPONSES["plate"]
-    if re.search(r"перекус", q):
-        return MOCK_RESPONSES["snacks"]
-    return MOCK_RESPONSES["general"]
-
-
 # ── Application ──
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    articles = load_articles()
+    settings = load_settings()
     await init_db()
+    await sync_articles(articles)
+    app.state.rag = RagService(BM25Index(articles), settings)
     yield
 
 
 app = FastAPI(
     title="Fat-counter API",
-    version="1.0.0",
+    version="1.1.0",
     lifespan=lifespan,
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -217,17 +157,30 @@ async def delete_all_meals():
 
 # ── Sources endpoints ──
 
+@app.get("/api/knowledge", response_model=list[SourceRead])
+async def knowledge_catalog(request: Request, q: str = Query(default="", max_length=200)):
+    # Exactly the indexed documents, independent of bookmarks and legacy rows.
+    article_ids = {article.id for article in request.app.state.rag.index.articles}
+    sources = await list_sources(request)
+    query = q.strip().casefold().replace("ё", "е")
+    return [source for source in sorted(sources, key=lambda source: source.id)
+            if source.id in article_ids and (not query or query in " ".join(
+                (source.id, source.title, source.description, source.content)
+            ).casefold().replace("ё", "е"))]
+
+def source_from_row(row) -> SourceRead:
+    return SourceRead(**{**dict(row), "bookmarked": bool(row["bookmarked"])})
+
 @app.get("/api/sources", response_model=list[SourceRead])
-async def list_sources():
+async def list_sources(request: Request):
     db = await get_db()
     try:
-        cursor = await db.execute("SELECT id, title, category, description, bookmarked FROM sources")
+        cursor = await db.execute("SELECT * FROM sources")
         rows = await cursor.fetchall()
-        return [
-            SourceRead(id=r["id"], title=r["title"], category=r["category"],
-                       description=r["description"], bookmarked=bool(r["bookmarked"]))
-            for r in rows
-        ]
+        migrated_ids = {article.legacy_id for article in request.app.state.rag.index.articles
+                        if article.legacy_id}
+        # Keep old rows addressable, but do not show duplicate canonical/legacy cards.
+        return [source_from_row(row) for row in rows if row["id"] not in migrated_ids]
     finally:
         await db.close()
 
@@ -240,8 +193,7 @@ async def get_source(source_id: str):
         row = await cursor.fetchone()
         if not row:
             raise HTTPException(404, "Source not found")
-        return SourceRead(id=row["id"], title=row["title"], category=row["category"],
-                          description=row["description"], bookmarked=bool(row["bookmarked"]))
+        return source_from_row(row)
     finally:
         await db.close()
 
@@ -259,8 +211,9 @@ async def toggle_source_bookmark(source_id: str, data: SourceBookmarkUpdate):
             (int(data.bookmarked), source_id),
         )
         await db.commit()
-        return SourceRead(id=row["id"], title=row["title"], category=row["category"],
-                          description=row["description"], bookmarked=data.bookmarked)
+        source = source_from_row(row)
+        source.bookmarked = data.bookmarked
+        return source
     finally:
         await db.close()
 
@@ -288,12 +241,38 @@ async def list_foods(q: str = Query(default="", max_length=200)):
         await db.close()
 
 
-# ── Chat endpoint (mock) ──
+# ── Chat endpoints (BM25 + optional Gemini) ──
+
+@app.get("/api/chat/status")
+async def chat_status(request: Request):
+    return request.app.state.rag.status()
 
 @app.post("/api/chat", response_model=ChatResponse)
-async def chat(data: ChatRequest):
-    mock = select_mock(data.question)
-    return ChatResponse(**mock)
+async def chat(data: ChatRequest, request: Request):
+    # Only the explicit diary action reads personal records for the provider.
+    if data.scope == "diary":
+        diary_context = await get_diary_context()
+        task = asyncio.create_task(request.app.state.rag.answer(data.question, diary_context=diary_context))
+    else:
+        task = asyncio.create_task(request.app.state.rag.answer(data.question))
+    try:
+        # Uvicorn does not cancel a normal handler automatically on disconnect.
+        # Stop the provider call and release its slot when the browser resets chat.
+        while not task.done():
+            done, _ = await asyncio.wait({task}, timeout=0.2)
+            if not done and await request.is_disconnected():
+                return Response(status_code=499)
+        return await task
+    except LLMError as error:
+        raise HTTPException(
+            error.status_code, detail={"code": error.code, "message": error.message},
+            headers={"Retry-After": "10"} if error.status_code == 429 else None,
+        ) from None
+    finally:
+        if not task.done():
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
 
 
 # ── Favicon (prevent 404 in browser logs) ──

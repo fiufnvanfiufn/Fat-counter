@@ -66,6 +66,12 @@ async def init_db() -> None:
             );
         """)
 
+        # Add provenance columns to existing databases without replacing user bookmarks.
+        columns = {row["name"] for row in await db.execute_fetchall("PRAGMA table_info(sources)")}
+        for column in ("url", "publisher", "content", "updated_at"):
+            if column not in columns:
+                await db.execute(f"ALTER TABLE sources ADD COLUMN {column} TEXT NOT NULL DEFAULT ''")
+
         # Seed profile if empty
         row = await db.execute_fetchall("SELECT id FROM profile")
         if not row:
@@ -126,6 +132,57 @@ async def init_db() -> None:
             )
 
         await db.commit()
+    finally:
+        await db.close()
+
+
+async def sync_articles(articles) -> None:
+    """Upsert reviewed corpus metadata; bookmarked state belongs to the user."""
+    db = await get_db()
+    try:
+        await db.executemany(
+            """INSERT INTO sources (id, title, category, description, url, publisher, content, updated_at, bookmarked)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, COALESCE((SELECT bookmarked FROM sources WHERE id = ?), 0))
+               ON CONFLICT(id) DO UPDATE SET
+                   title=excluded.title, category=excluded.category, description=excluded.description,
+                   url=excluded.url, publisher=excluded.publisher, content=excluded.content,
+                   updated_at=excluded.updated_at""",
+            [(a.id, a.title, a.category, a.description, a.url, a.publisher, a.content, a.updated_at,
+              a.legacy_id or "")
+             for a in articles],
+        )
+        await db.commit()
+    finally:
+        await db.close()
+
+
+async def get_diary_context() -> dict:
+    """Explicit user-requested snapshot: recorded foods/totals/goals, no identity fields."""
+    db = await get_db()
+    try:
+        rows = await db.execute_fetchall(
+            "SELECT meal, name, cals, protein, fat, carbs, weight FROM meals ORDER BY created_at"
+        )
+        profiles = await db.execute_fetchall("SELECT calories, protein FROM profile WHERE id = 1")
+        totals = {
+            "calories": sum(row["cals"] for row in rows),
+            **{nutrient: round(sum(row[nutrient] for row in rows), 2)
+               for nutrient in ("protein", "fat", "carbs")},
+        }
+        targets = ({key: profiles[0][key] for key in ("calories", "protein") if profiles[0][key] > 0}
+                   if profiles else {})
+        # The schema has no date filter: do not present these as a full current day.
+        return {
+            "meals": [dict(row) for row in rows[-50:]],
+            "record_count": len(rows),
+            "record_unit": "записанные блюда, не отдельные приёмы пищи",
+            "meal_groups_count": len({row["meal"] for row in rows}),
+            "totals": totals,
+            "targets": targets,
+            "scope_note": "Итоги всех записанных блюд, не обязательно полного дня. "
+                          "Показаны последние 50 записей, суммы рассчитаны по всем записям. "
+                          "Цели заданы пользователем, не рассчитаны как медицинские нормы.",
+        }
     finally:
         await db.close()
 

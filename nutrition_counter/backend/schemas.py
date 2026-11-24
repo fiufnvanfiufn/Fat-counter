@@ -1,8 +1,8 @@
 """Pydantic schemas for the Fat-counter API."""
 
 from __future__ import annotations
-from pydantic import BaseModel, Field
-from typing import Optional
+from pydantic import BaseModel, Field, StringConstraints
+from typing import Annotated, Literal, Optional
 
 
 # ── Profile ──
@@ -66,6 +66,10 @@ class SourceRead(BaseModel):
     category: str
     description: str
     bookmarked: bool
+    url: str = ""
+    publisher: str = ""
+    content: str = ""
+    updated_at: str = ""
 
 
 class SourceBookmarkUpdate(BaseModel):
@@ -84,10 +88,27 @@ class FoodRead(BaseModel):
     weight: int
 
 
-# ── Chat (mock) ──
+# ── Chat (BM25 + Gemini) ──
 
 class ChatRequest(BaseModel):
-    question: str = Field(..., min_length=1, max_length=2000)
+    question: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+    scope: Literal["general", "diary"] = "general"
+
+
+class DiarySummary(BaseModel):
+    record_count: int
+    totals: dict[str, float]
+    targets: dict[str, float]
+    scope_note: str
+
+
+class PassageRead(BaseModel):
+    source_id: str
+    chunk_id: str
+    title: str
+    text: str
+    url: str
+    score: float
 
 
 class ChatResponse(BaseModel):
@@ -95,4 +116,9 @@ class ChatResponse(BaseModel):
     items: list[str]
     end: str
     sources: list[str]
+    mode: Literal["gemini", "retrieval", "no_context"]
+    model: Optional[str] = None
+    warning: Optional[str] = None
+    passages: list[PassageRead] = Field(default_factory=list)
+    diary_summary: Optional[DiarySummary] = None
 
