@@ -1,0 +1,7 @@
+﻿__pycache__/
+*.pyc
+.venv/
+fat_counter.db
+fat_counter.db-wal
+fat_counter.db-shm
+

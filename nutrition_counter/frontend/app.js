@@ -1,98 +1,81 @@
-// KNOWLEDGE BASE & MOCK DATA
-const INITIAL_SOURCES = {
-  protein: { id: 'protein', title: 'Источники белка в повседневном рационе', category: 'articles', description: 'Статья о разнообразии белковых продуктов: птице, рыбе, яйцах, бобовых и тофу. Разбор пищевой ценности и усвояемости.', bookmarked: false },
-  alternatives: { id: 'alternatives', title: 'Как выбирать альтернативы мясу', category: 'tips', description: 'Практический обзор замен привычных видов мяса с учётом вкуса, способа приготовления и баланса нутриентов.', bookmarked: false },
-  plate: { id: 'plate', title: 'Принцип сбалансированной тарелки', category: 'articles', description: 'Наглядный метод формирования приёма пищи: 50% овощей и зелени, 25% белка, 25% сложных углеводов.', bookmarked: true },
-  habits: { id: 'habits', title: 'Простые привычки в питании', category: 'tips', description: 'Советы по планированию заготовок, регулярному гидратированию и осознанному выбору продуктов на каждый день.', bookmarked: false },
-  snacks: { id: 'snacks', title: 'Идеи для полезного перекуса', category: 'recipes', description: 'Быстрые и питательные сочетания с белком и клетчаткой для поддержания энергии между основными приёмами пищи.', bookmarked: false }
-};
+// ── API Client ──
+const API_BASE = '';  // Same origin; change to 'http://localhost:8000' if running separately
 
-// FOOD DATASET (Pre-populated database of foods and dishes)
-const FOOD_DATASET = [
-  { id: 'f1', name: 'Овсяная каша с ягодами', cals: 210, protein: 6, fat: 4, carbs: 36, weight: 200 },
-  { id: 'f2', name: 'Омлет со шпинатом (2 яйца)', cals: 240, protein: 16, fat: 18, carbs: 2, weight: 150 },
-  { id: 'f3', name: 'Куриное филе на гриле', cals: 165, protein: 31, fat: 3.5, carbs: 0, weight: 150 },
-  { id: 'f4', name: 'Гречка отварная с оливковым маслом', cals: 180, protein: 6, fat: 5, carbs: 28, weight: 180 },
-  { id: 'f5', name: 'Лосось на пару с овощами', cals: 290, protein: 24, fat: 18, carbs: 6, weight: 220 },
-  { id: 'f6', name: 'Творог 5% с миндалём и мёдом', cals: 230, protein: 18, fat: 11, carbs: 14, weight: 160 },
-  { id: 'f7', name: 'Салат из свежих овощей', cals: 90, protein: 2, fat: 5, carbs: 8, weight: 150 },
-  { id: 'f8', name: 'Яблоко зелёное', cals: 80, protein: 0.4, fat: 0.2, carbs: 19, weight: 150 },
-  { id: 'f9', name: 'Греческий йогурт натуральный', cals: 130, protein: 10, fat: 5, carbs: 6, weight: 140 },
-  { id: 'f10', name: 'Тост с авокадо и яйцом пашот', cals: 280, protein: 11, fat: 16, carbs: 22, weight: 140 }
-];
-
-// DEFAULT SAMPLE MEALS IF NONE LOGGED
-const INITIAL_LOGGED_MEALS = [
-  { id: 'm1', meal: 'breakfast', name: 'Омлет со шпинатом (2 яйца)', cals: 240, protein: 16, fat: 18, carbs: 2, weight: 150 },
-  { id: 'm2', meal: 'breakfast', name: 'Овсяная каша с ягодами', cals: 210, protein: 6, fat: 4, carbs: 36, weight: 200 },
-  { id: 'm3', meal: 'lunch', name: 'Куриное филе на гриле', cals: 165, protein: 31, fat: 3.5, carbs: 0, weight: 150 },
-  { id: 'm4', meal: 'lunch', name: 'Гречка отварная с оливковым маслом', cals: 180, protein: 6, fat: 5, carbs: 28, weight: 180 }
-];
-
-const MOCK_RESPONSES = {
-  alternatives: {
-    intro: 'В качестве замены свинине можно рассмотреть несколько отличных продуктов — выбор зависит от конкретного блюда и ваших целей:',
-    items: [
-      'Птица (курица, индейка) — диетический источник белка с низким содержанием насыщенных жиров.',
-      'Рыба и морепродукты — обогащают рацион Омега-3 жирными кислотами.',
-      'Чечевица, фасоль и нут — растительные альтернативы с высоким содержанием клетчатки.'
-    ],
-    end: 'Попробуйте начать с замены в одном любимом блюде (например, приготовьте рагу с индейкой или нутом).',
-    sources: ['alternatives', 'protein']
-  },
-  protein: {
-    intro: 'Белок необходимо получать из разнообразных источников для полноценного набора аминокислот:',
-    items: [
-      'Животные источники: филе индейки/курицы, нежирная рыба, творог 2-5%, яйца.',
-      'Растительные источники: чечевица, маш, нут, тофу и цельнозерновые крупы.',
-      'Орехи и семена — как дополнение к основным блюдам.'
-    ],
-    end: 'Оптимально распределять белок равномерно между 3–4 приёмами пищи в течение дня.',
-    sources: ['protein', 'plate']
-  },
-  plate: {
-    intro: 'Для сборки сбалансированного приёма пищи используйте проверенное правило гарвардской тарелки:',
-    items: [
-      '1/2 тарелки: свежие или тушёные овощи, зелень, салатные листья.',
-      '1/4 тарелки: нежирный белок (рыба, птица, бобовые, яйца).',
-      '1/4 тарелки: сложные углеводы (гречка, бурый рис, киноа, цельнозерновые макароны).'
-    ],
-    end: 'Добавьте 1 чайную ложку полезного растительного масла (оливковое, льняное) для заправки.',
-    sources: ['plate', 'habits']
-  },
-  snacks: {
-    intro: 'Полезный перекус должен сочетать сложные углеводы или клетчатку с белком:',
-    items: [
-      'Натуральный греческий йогурт + горсть свежих ягод.',
-      'Яблоко или дольки груши + 15–20 г сырого миндаля.',
-      'Цельнозерновой тост + паста из авокадо или хумус.'
-    ],
-    end: 'Такие сочетания обеспечивают долгую сытость без резких скачков сахара в крови.',
-    sources: ['snacks', 'habits']
-  },
-  general: {
-    intro: 'Спасибо за вопрос! Чтобы составить правильный рацион, придерживайтесь базовых ориентиров:',
-    items: [
-      'Разнообразие: включайте продукты разных цветов и групп каждый день.',
-      'Регулярность: питайтесь каждые 3.5–4.5 часа без длительного голодания.',
-      'Гидратация: поддерживайте питьевой режим в течение дня.'
-    ],
-    end: 'Задайте более конкретный вопрос — например: «Какие продукты богаты белком?» или «Как собрать сбалансированный обед?».',
-    sources: ['plate', 'habits']
+async function apiFetch(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', ...options.headers },
+    ...options,
+  });
+  if (!res.ok && res.status !== 204) {
+    const text = await res.text();
+    throw new Error(`API error ${res.status}: ${text}`);
   }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ── API functions ──
+
+async function apiGetProfile() {
+  return apiFetch('/api/profile');
+}
+
+async function apiUpdateProfile(data) {
+  return apiFetch('/api/profile', { method: 'PUT', body: JSON.stringify(data) });
+}
+
+async function apiGetMeals() {
+  return apiFetch('/api/meals');
+}
+
+async function apiCreateMeal(data) {
+  return apiFetch('/api/meals', { method: 'POST', body: JSON.stringify(data) });
+}
+
+async function apiDeleteMeal(mealId) {
+  return apiFetch(`/api/meals/${encodeURIComponent(mealId)}`, { method: 'DELETE' });
+}
+
+async function apiDeleteAllMeals() {
+  return apiFetch('/api/meals', { method: 'DELETE' });
+}
+
+async function apiGetSources() {
+  return apiFetch('/api/sources');
+}
+
+async function apiToggleBookmark(sourceId, bookmarked) {
+  return apiFetch(`/api/sources/${encodeURIComponent(sourceId)}/bookmark`, {
+    method: 'PATCH',
+    body: JSON.stringify({ bookmarked }),
+  });
+}
+
+async function apiGetFoods(query = '') {
+  const params = query ? `?q=${encodeURIComponent(query)}` : '';
+  return apiFetch(`/api/foods${params}`);
+}
+
+async function apiChat(question) {
+  return apiFetch('/api/chat', { method: 'POST', body: JSON.stringify({ question }) });
+}
+
+// KNOWLEDGE BASE & MOCK DATA (kept for initial fallback; sources now come from API)
+
+// FOOD DATASET — now loaded from API
+let FOOD_DATASET = [];
+
+// APP STATE
+let sources = {};
+let userProfile = {
+  name: 'Алексей', age: 28, height: 178, weight: 74,
+  goal: 'maintenance', calories: 2100, protein: 120,
+  lactose: true, gluten: false, veg: false, sugar: false
 };
-
-// LOCAL STORAGE KEYS & APP STATE
-const STORAGE_KEY_PROFILE = 'fat_counter_profile_v1';
-const STORAGE_KEY_SOURCES = 'fat_counter_sources_v1';
-const STORAGE_KEY_MEALS = 'fat_counter_meals_v1';
-
-let sources = loadSources();
-let userProfile = loadProfile();
-let loggedMeals = loadMeals();
+let loggedMeals = [];
 
 let activeDialogSourceId = null;
-let activeTargetMeal = 'breakfast'; // 'breakfast' | 'lunch' | 'dinner' | 'snack'
+let activeTargetMeal = 'breakfast';
 let currentView = 'chat';
 let pending = false;
 let generation = 0;
@@ -124,48 +107,6 @@ const dialog = document.querySelector('#source-dialog');
 const addFoodDialog = document.querySelector('#add-food-dialog');
 
 // UTILITY FUNCTIONS
-function loadProfile() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_PROFILE);
-    if (saved) return JSON.parse(saved);
-  } catch (e) { /* fallback */ }
-  return {
-    name: 'Алексей', age: 28, height: 178, weight: 74,
-    goal: 'maintenance', calories: 2100, protein: 120,
-    lactose: true, gluten: false, veg: false, sugar: false
-  };
-}
-
-function saveProfile(p) {
-  userProfile = p;
-  try { localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(p)); } catch (e) {}
-  updateStatsUI();
-}
-
-function loadSources() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_SOURCES);
-    if (saved) return JSON.parse(saved);
-  } catch (e) { /* fallback */ }
-  return JSON.parse(JSON.stringify(INITIAL_SOURCES));
-}
-
-function saveSources() {
-  try { localStorage.setItem(STORAGE_KEY_SOURCES, JSON.stringify(sources)); } catch (e) {}
-}
-
-function loadMeals() {
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY_MEALS);
-    if (saved) return JSON.parse(saved);
-  } catch (e) { /* fallback */ }
-  return JSON.parse(JSON.stringify(INITIAL_LOGGED_MEALS));
-}
-
-function saveMeals() {
-  try { localStorage.setItem(STORAGE_KEY_MEALS, JSON.stringify(loggedMeals)); } catch (e) {}
-  updateStatsUI();
-}
 
 function icon(name) {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -237,10 +178,17 @@ function showSourceModal(id) {
   dialog.showModal();
 }
 
-function toggleSourceBookmark(id, buttonEl) {
+async function toggleSourceBookmark(id, buttonEl) {
   if (!sources[id]) return;
-  sources[id].bookmarked = !sources[id].bookmarked;
-  saveSources();
+  const newState = !sources[id].bookmarked;
+
+  try {
+    await apiToggleBookmark(id, newState);
+    sources[id].bookmarked = newState;
+  } catch (e) {
+    console.error('Failed to toggle bookmark:', e);
+    return;
+  }
 
   if (buttonEl) {
     if (sources[id].bookmarked) buttonEl.classList.add('active');
@@ -255,24 +203,32 @@ function toggleSourceBookmark(id, buttonEl) {
 }
 
 // FOOD DIARY LOGIC & STATS
-function addFoodToMeal(mealType, foodObj) {
-  const newEntry = {
-    id: 'm_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
-    meal: mealType,
-    name: foodObj.name,
-    cals: Math.round(Number(foodObj.cals) || 0),
-    protein: Math.round(Number(foodObj.protein) || 0),
-    fat: Math.round(Number(foodObj.fat) || 0),
-    carbs: Math.round(Number(foodObj.carbs) || 0),
-    weight: Math.round(Number(foodObj.weight) || 150)
-  };
-  loggedMeals.push(newEntry);
-  saveMeals();
+async function addFoodToMeal(mealType, foodObj) {
+  try {
+    const created = await apiCreateMeal({
+      meal: mealType,
+      name: foodObj.name,
+      cals: Math.round(Number(foodObj.cals) || 0),
+      protein: Math.round(Number(foodObj.protein) || 0),
+      fat: Math.round(Number(foodObj.fat) || 0),
+      carbs: Math.round(Number(foodObj.carbs) || 0),
+      weight: Math.round(Number(foodObj.weight) || 150),
+    });
+    loggedMeals.push(created);
+    updateStatsUI();
+  } catch (e) {
+    console.error('Failed to add meal:', e);
+  }
 }
 
-function removeMealEntry(entryId) {
-  loggedMeals = loggedMeals.filter(m => m.id !== entryId);
-  saveMeals();
+async function removeMealEntry(entryId) {
+  try {
+    await apiDeleteMeal(entryId);
+    loggedMeals = loggedMeals.filter(m => m.id !== entryId);
+    updateStatsUI();
+  } catch (e) {
+    console.error('Failed to delete meal:', e);
+  }
 }
 
 function updateStatsUI() {
@@ -281,7 +237,6 @@ function updateStatsUI() {
   const targetFat = 70;
   const targetCarbs = 250;
 
-  // Compute total calories and macros from logged meals for today
   let consumedCal = 0;
   let consumedProtein = 0;
   let consumedFat = 0;
@@ -302,7 +257,6 @@ function updateStatsUI() {
     }
   });
 
-  // Update total calories card
   const calValEl = document.querySelector('#cal-value');
   if (calValEl) {
     calValEl.replaceChildren();
@@ -327,7 +281,6 @@ function updateStatsUI() {
     }
   }
 
-  // Update macros
   const protValEl = document.querySelector('#protein-value');
   if (protValEl) protValEl.textContent = `${consumedProtein} / ${targetProtein} г`;
   const protProgEl = document.querySelector('#protein-progress');
@@ -343,7 +296,6 @@ function updateStatsUI() {
   const carbsProgEl = document.querySelector('#carbs-progress');
   if (carbsProgEl) carbsProgEl.style.width = Math.min(100, Math.round((consumedCarbs / targetCarbs) * 100)) + '%';
 
-  // Update category lists in HTML
   ['breakfast', 'lunch', 'dinner', 'snack'].forEach(meal => {
     const calsEl = document.querySelector(`#${meal}-cals`);
     if (calsEl) calsEl.textContent = `${categoryTotals[meal]} ккал`;
@@ -387,7 +339,6 @@ function updateStatsUI() {
   const chartTargetNum = document.querySelector('#chart-target-num');
   if (chartTargetNum) chartTargetNum.textContent = targetCal.toLocaleString('ru-RU');
 
-  // Render weekly chart
   const weeklyChart = document.querySelector('#weekly-chart');
   if (weeklyChart) {
     weeklyChart.replaceChildren();
@@ -427,7 +378,6 @@ function openFoodDialog(mealType) {
   const searchInp = document.querySelector('#food-search-input');
   if (searchInp) searchInp.value = '';
 
-  // Reset to preset tab
   switchFoodTab('preset');
   addFoodDialog.showModal();
 }
@@ -510,15 +460,6 @@ function assistantMessage() {
   return message;
 }
 
-function selectMock(question) {
-  const q = question.toLocaleLowerCase('ru');
-  if (/свинин|замен|альтернатив/.test(q)) return MOCK_RESPONSES.alternatives;
-  if (/бел[ко]|протеин/.test(q)) return MOCK_RESPONSES.protein;
-  if (/обед|сбаланс|тарелк/.test(q)) return MOCK_RESPONSES.plate;
-  if (/перекус/.test(q)) return MOCK_RESPONSES.snacks;
-  return MOCK_RESPONSES.general;
-}
-
 function scrollToMessage(msg) {
   msg.scrollIntoView({
     behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
@@ -570,7 +511,7 @@ function addAnswer(mock) {
   scrollToMessage(message);
 }
 
-function ask(question) {
+async function ask(question) {
   if (pending || !question.trim()) return;
 
   switchView('chat');
@@ -602,17 +543,26 @@ function ask(question) {
   document.querySelectorAll('.suggestion').forEach(btn => btn.disabled = true);
   scrollToMessage(user);
 
-  responseTimer = setTimeout(() => {
+  try {
+    const mock = await apiChat(question);
     if (request !== generation) return;
     loading.remove();
-    addAnswer(selectMock(question));
+    addAnswer(mock);
+  } catch (e) {
+    console.error('Chat error:', e);
+    if (request !== generation) return;
+    loading.remove();
+    const errMsg = assistantMessage();
+    errMsg.append(element('p', 'answer-body', 'Не удалось получить ответ. Попробуйте ещё раз.'));
+    conversation.append(errMsg);
+  } finally {
     pending = false;
     input.disabled = false;
     conversation.setAttribute('aria-busy', 'false');
     syncInput();
     document.querySelectorAll('.suggestion').forEach(btn => btn.disabled = false);
     input.focus({ preventScroll: true });
-  }, 1000);
+  }
 }
 
 function resetChat() {
@@ -706,7 +656,7 @@ function fillSettingsForm() {
 
 const settingsForm = document.querySelector('#settings-form');
 if (settingsForm) {
-  settingsForm.addEventListener('submit', (e) => {
+  settingsForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const updated = {
       name: document.querySelector('#user-name').value.trim() || 'Пользователь',
@@ -722,12 +672,18 @@ if (settingsForm) {
       sugar: document.querySelector('#pref-sugar').checked
     };
 
-    saveProfile(updated);
+    try {
+      userProfile = await apiUpdateProfile(updated);
+      updateStatsUI();
 
-    const toast = document.querySelector('#settings-toast');
-    if (toast) {
-      toast.hidden = false;
-      setTimeout(() => { toast.hidden = true; }, 2500);
+      const toast = document.querySelector('#settings-toast');
+      if (toast) {
+        toast.hidden = false;
+        setTimeout(() => { toast.hidden = true; }, 2500);
+      }
+    } catch (e) {
+      console.error('Failed to save profile:', e);
+      alert('Ошибка сохранения профиля');
     }
   });
 }
@@ -861,10 +817,16 @@ if (resetChatDataBtn) {
 
 const resetMealsDataBtn = document.querySelector('#reset-meals-data-btn');
 if (resetMealsDataBtn) {
-  resetMealsDataBtn.addEventListener('click', () => {
-    loggedMeals = [];
-    saveMeals();
-    alert('Дневник питания сброшен.');
+  resetMealsDataBtn.addEventListener('click', async () => {
+    try {
+      await apiDeleteAllMeals();
+      loggedMeals = [];
+      updateStatsUI();
+      alert('Дневник питания сброшен.');
+    } catch (e) {
+      console.error('Failed to reset meals:', e);
+      alert('Ошибка при сбросе дневника.');
+    }
   });
 }
 
@@ -877,6 +839,32 @@ if (favFiltersContainer) {
   });
 }
 
-// INITIAL APP START
-switchView('chat');
-syncInput();
+// ── INITIAL APP LOAD (async from API) ──
+async function initApp() {
+  try {
+    // Load all data from backend in parallel
+    const [profileData, mealsData, sourcesData, foodsData] = await Promise.all([
+      apiGetProfile(),
+      apiGetMeals(),
+      apiGetSources(),
+      apiGetFoods(),
+    ]);
+
+    userProfile = profileData;
+    loggedMeals = mealsData;
+
+    // Convert sources array to object keyed by id
+    sources = {};
+    sourcesData.forEach(s => { sources[s.id] = s; });
+
+    FOOD_DATASET = foodsData;
+  } catch (e) {
+    console.error('Failed to load data from API, app may not work correctly:', e);
+  }
+
+  switchView('chat');
+  syncInput();
+}
+
+initApp();
+

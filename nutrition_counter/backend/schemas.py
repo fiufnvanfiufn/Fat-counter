@@ -1,0 +1,98 @@
+"""Pydantic schemas for the Fat-counter API."""
+
+from __future__ import annotations
+from pydantic import BaseModel, Field
+from typing import Optional
+
+
+# ── Profile ──
+
+class ProfileRead(BaseModel):
+    name: str
+    age: int
+    height: int
+    weight: int
+    goal: str
+    calories: int
+    protein: int
+    lactose: bool
+    gluten: bool
+    veg: bool
+    sugar: bool
+
+
+class ProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    age: Optional[int] = None
+    height: Optional[int] = None
+    weight: Optional[int] = None
+    goal: Optional[str] = None
+    calories: Optional[int] = None
+    protein: Optional[int] = None
+    lactose: Optional[bool] = None
+    gluten: Optional[bool] = None
+    veg: Optional[bool] = None
+    sugar: Optional[bool] = None
+
+
+# ── Meals ──
+
+class MealCreate(BaseModel):
+    meal: str = Field(..., pattern=r"^(breakfast|lunch|dinner|snack)$")
+    name: str = Field(..., min_length=1, max_length=200)
+    cals: int = Field(default=0, ge=0)
+    protein: float = Field(default=0, ge=0)
+    fat: float = Field(default=0, ge=0)
+    carbs: float = Field(default=0, ge=0)
+    weight: int = Field(default=150, ge=0)
+
+
+class MealRead(BaseModel):
+    id: str
+    meal: str
+    name: str
+    cals: int
+    protein: float
+    fat: float
+    carbs: float
+    weight: int
+
+
+# ── Sources ──
+
+class SourceRead(BaseModel):
+    id: str
+    title: str
+    category: str
+    description: str
+    bookmarked: bool
+
+
+class SourceBookmarkUpdate(BaseModel):
+    bookmarked: bool
+
+
+# ── Foods ──
+
+class FoodRead(BaseModel):
+    id: str
+    name: str
+    cals: int
+    protein: float
+    fat: float
+    carbs: float
+    weight: int
+
+
+# ── Chat (mock) ──
+
+class ChatRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=2000)
+
+
+class ChatResponse(BaseModel):
+    intro: str
+    items: list[str]
+    end: str
+    sources: list[str]
+
