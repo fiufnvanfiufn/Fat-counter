@@ -1,6 +1,7 @@
 """Run from any directory: python -m unittest discover -s .../backend/tests -v."""
 
 import asyncio
+import json
 import math
 import sqlite3
 import sys
@@ -238,6 +239,29 @@ class ApiMigrationTests(unittest.TestCase):
         self.assertEqual(result.status_code, 429)
         self.assertEqual(result.json()["detail"]["code"], "llm_rate_limit")
         self.assertEqual(result.headers["retry-after"], "10")
+
+    def test_invalid_model_json_returns_specific_error_instead_of_502(self):
+        async def fail(question):
+            raise LLMError("llm_schema_mismatch", "JSON Gemini не соответствует формату ответа: items.", 424)
+        with patch.object(main.app.state.rag, "answer", side_effect=fail):
+            result = self.client.post("/api/chat", json={"question": "Белок"})
+        self.assertEqual(result.status_code, 424)
+        self.assertEqual(result.json()["detail"], {
+            "code": "llm_schema_mismatch", "message": "JSON Gemini не соответствует формату ответа: items."
+        })
+
+    def test_benchmark_trap_refusal_has_automatic_annotation(self):
+        cases = json.loads((Path(__file__).resolve().parents[2] / "benchmark/questions.json").read_text(encoding="utf-8"))["cases"]
+        case = next(case for case in cases if case["id"] == "T05")
+        async def refuse(question):
+            return main.ChatResponse(mode="no_context", intro="Недостаточно данных", items=[], end="", sources=[], passages=[])
+        with patch.object(main.app.state.rag, "answer", side_effect=refuse):
+            result = self.client.post("/api/chat", json={"question": case["question"]})
+        self.assertEqual(result.status_code, 200)
+        diagnostic = result.json()["diagnostic"]
+        self.assertEqual(diagnostic["case_id"], "T05")
+        self.assertEqual(diagnostic["codes"], [])
+        self.assertIn("О —", diagnostic["label"])
 
     def test_secrets_and_backend_not_served_as_static(self):
         for path in ("/.env", "/backend/.env", "/knowledge/articles.json"):

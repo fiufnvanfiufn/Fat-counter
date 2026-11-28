@@ -714,3 +714,5 @@ dialog p:not(.eyebrow) { font-size: 13px; line-height: 1.7; color: #5c6858; }
     scroll-behavior: auto !important;
   }
 }
+
+.error-annotation{margin-top:20px;padding-top:12px;border-top:1px solid #dce4d5;font-size:12px}.error-annotation-result{font-weight:600;color:#38543c}.error-annotation summary{cursor:pointer}.error-annotation-choice{display:flex;align-items:flex-start;gap:8px;margin:10px 0}.error-annotation-choice input{margin-top:5px;flex-shrink:0}

@@ -16,6 +16,7 @@ from fastapi.requests import Request
 from config import load_settings
 from database import get_db, init_db, sync_articles, get_diary_context
 from llm import LLMError
+from diagnostics import annotate
 from rag import RagService
 from retrieval import BM25Index, load_articles
 from schemas import (
@@ -262,7 +263,10 @@ async def chat(data: ChatRequest, request: Request):
             done, _ = await asyncio.wait({task}, timeout=0.2)
             if not done and await request.is_disconnected():
                 return Response(status_code=499)
-        return await task
+        answer = await task
+        if data.scope == "general":
+            answer.diagnostic = annotate(data.question, answer, request.app.state.rag.index)
+        return answer
     except LLMError as error:
         raise HTTPException(
             error.status_code, detail={"code": error.code, "message": error.message},

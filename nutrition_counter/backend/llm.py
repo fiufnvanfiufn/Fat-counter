@@ -36,7 +36,7 @@ class GroundedAnswer(BaseModel):
 class LLMError(Exception):
     """A safe error intended for the API; never contains an upstream body or key."""
 
-    def __init__(self, code: str, message: str, status_code: int = 502):
+    def __init__(self, code: str, message: str, status_code: int = 424):
         super().__init__(message)
         self.code = code
         self.message = message
@@ -149,7 +149,7 @@ class GeminiClient:
         except httpx.TimeoutException:
             raise LLMError("llm_timeout", "Gemini не ответил вовремя. Попробуйте позже.", 504) from None
         except httpx.RequestError:
-            raise LLMError("llm_unavailable", "Не удалось связаться с Gemini. Проверьте соединение и доступность сервиса.") from None
+            raise LLMError("llm_unavailable", "Не удалось соединиться с Gemini: ошибка сети или DNS. Проверьте соединение.", 503) from None
 
         if response.status_code == 429:
             raise LLMError("llm_rate_limit", "Лимит Gemini исчерпан. Проверьте квоту в AI Studio и попробуйте позже.", 429)
@@ -158,7 +158,9 @@ class GeminiClient:
         if response.status_code == 404:
             raise LLMError("llm_model_unavailable", "Модель Gemini недоступна. Проверьте GEMINI_MODEL и доступ к модели в AI Studio.", 503)
         if not response.is_success:
-            raise LLMError("llm_unavailable", "Gemini отклонил запрос или временно недоступен. Проверьте настройки сервиса.")
+            if response.status_code >= 500:
+                raise LLMError("llm_unavailable", f"Сервис Gemini временно недоступен (HTTP {response.status_code}). Повторите запрос позже.", 503)
+            raise LLMError("llm_request_rejected", f"Gemini отклонил параметры запроса (HTTP {response.status_code}). Проверьте модель и настройки генерации.", 424)
 
         try:
             payload = response.json()
@@ -167,17 +169,38 @@ class GeminiClient:
             feedback = payload.get("promptFeedback", {})
             if isinstance(feedback, dict) and feedback.get("blockReason"):
                 raise LLMError("llm_blocked", "Gemini не смог обработать этот вопрос. Попробуйте переформулировать его.", 422)
+            if not payload.get("candidates"):
+                raise LLMError("llm_empty_response", "Gemini не вернул ни одного варианта ответа. Повторите запрос.")
             candidate = payload["candidates"][0]
             finish_reason = candidate.get("finishReason")
             if finish_reason in {"SAFETY", "BLOCKLIST", "PROHIBITED_CONTENT", "SPII", "RECITATION"}:
                 raise LLMError("llm_blocked", "Gemini не смог обработать этот вопрос. Попробуйте переформулировать его.", 422)
+            if finish_reason == "MAX_TOKENS":
+                raise LLMError("llm_truncated", "Ответ Gemini оборван из-за лимита выходных токенов. Сократите вопрос или запросите более короткий ответ.")
             if finish_reason != "STOP":
-                raise ValueError("unfinished response")
+                raise LLMError("llm_incomplete", "Gemini не завершил генерацию ответа штатно. Повторите запрос.")
             # Thinking parts are not part of the user-facing JSON answer.
             text = "".join(part.get("text", "") for part in candidate["content"]["parts"] if not part.get("thought"))
-            answer = GroundedAnswer.model_validate_json(text)
-        except (ValueError, TypeError, KeyError, IndexError, AttributeError, ValidationError):
-            raise LLMError("llm_invalid_response", "Gemini вернул неполный или некорректный ответ. Попробуйте ещё раз.") from None
+            if not text.strip():
+                raise LLMError("llm_empty_response", "Gemini завершил запрос, но не вернул текст ответа.")
+            try:
+                decoded = json.loads(text)
+            except (ValueError, TypeError):
+                raise LLMError("llm_invalid_json", "Текст Gemini не является корректным JSON. Результат не показан; повторите запрос.") from None
+            try:
+                # A declared refusal must never publish generated advice/citations.
+                # Some model versions still fill these fields despite answerable=false.
+                # Discard them rather than turn a safe refusal into a format failure.
+                if isinstance(decoded, dict) and decoded.get("answerable") is False:
+                    decoded = {**decoded, "items": [], "sources": []}
+                answer = GroundedAnswer.model_validate(decoded)
+            except ValidationError as error:
+                fields = sorted({str(item['loc'][0]) for item in error.errors(include_input=False)
+                                 if item['loc'] and str(item['loc'][0]) in GroundedAnswer.model_fields})
+                description = ", ".join(fields) or "согласованность answerable, items и sources"
+                raise LLMError("llm_schema_mismatch", f"JSON Gemini не соответствует формату ответа: {description}. Результат не показан; повторите запрос.") from None
+        except (ValueError, TypeError, KeyError, IndexError, AttributeError):
+            raise LLMError("llm_invalid_response", "Gemini вернул повреждённую структуру ответа API (ожидались candidates/content/parts).") from None
 
         if not set(answer.sources).issubset(allowed_ids):
             raise LLMError("llm_invalid_citations", "Ответ Gemini содержит неподтверждённые источники и не был показан.")

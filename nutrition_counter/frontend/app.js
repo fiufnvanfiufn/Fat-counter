@@ -14,6 +14,10 @@ async function apiFetch(path, options = {}) {
       ? 'Проверьте вопрос: он должен содержать от 1 до 2000 символов.'
       : `Сервер не смог обработать запрос (HTTP ${res.status}).`));
     error.status = res.status;
+    if (typeof detail?.code === 'string' && /^llm_[a-z_]+$/.test(detail.code)) {
+      error.code = detail.code;
+      error.message = `${message || 'Ошибка помощника'} [${detail.code}]`;
+    }
     throw error;
   }
   if (res.status === 204) return null;
@@ -623,6 +627,50 @@ function scrollToMessage(msg) {
   });
 }
 
+function errorAnnotation(providerFailure = false, diagnostic = null) {
+  const panel = element('section', 'error-annotation');
+  panel.setAttribute('aria-label', 'Разметка ошибки ответа');
+  const result = element('p', 'error-annotation-result', 'E1–E6: не размечено');
+  result.setAttribute('aria-live', 'polite');
+  panel.append(result);
+  if (diagnostic) {
+    result.textContent = diagnostic.label;
+    panel.append(element('p', '', diagnostic.basis));
+  }
+  if (providerFailure) panel.append(element('p', '', 'Технический сбой API — отдельная ошибка, не E1–E6 и не корректный отказ.'));
+  const details = element('details');
+  details.append(element('summary', '', 'Указать код ошибки по эталону'));
+  details.append(element('p', '', 'Оценка проверяющего: автоматическая проверка смысла не выполнялась. Для E1 учитываются первые 3 документа. Можно выбрать несколько кодов.'));
+  const definitions = {
+    E1: 'Нужного документа нет в топ-3 поиска',
+    E2: 'Фрагмент плохо нарезан или нечитаем',
+    E3: 'Нужные сведения есть в контексте, но модель их пропустила',
+    E4: 'Модель добавила факты, которых нет в документах',
+    E5: 'Ответа в корпусе нет, но система не отказалась',
+    E6: 'Эталон неверен или неполон — спорный случай'
+  };
+  const checks = [];
+  for (const [code, description] of Object.entries(definitions)) {
+    const label = element('label', 'error-annotation-choice');
+    const checkbox = element('input'); checkbox.type = 'checkbox'; checkbox.value = code;
+    checkbox.addEventListener('change', () => {
+      const selected = checks.filter(input => input.checked).map(input => input.value);
+      result.textContent = selected.length ? `Коды ошибок: ${selected.join(', ')} · оценка проверяющего` : 'E1–E6: не размечено';
+    });
+    checks.push(checkbox);
+    label.append(checkbox, element('span', '', `${code} — ${description}`));
+    details.append(label);
+  }
+  const correct = element('button', 'secondary-btn', 'Отметить: нет ошибки'); correct.type = 'button';
+  correct.addEventListener('click', () => {
+    checks.forEach(input => { input.checked = false; });
+    result.textContent = 'Коды ошибок: нет · оценка проверяющего';
+  });
+  details.append(correct, element('p', '', 'Разметка сбрасывается при перезагрузке страницы.'));
+  panel.append(details);
+  return panel;
+}
+
 function addAnswer(answer) {
   const message = assistantMessage();
   const modeLabel = message.querySelector('.mock-tag');
@@ -694,6 +742,7 @@ function addAnswer(answer) {
     : answer.mode === 'retrieval'
       ? 'Показаны выдержки из локальной базы. Генерация ответа нейросетью не выполнялась.'
       : 'В локальной базе не найдено достаточно материалов для ответа.'));
+  body.append(errorAnnotation(false, answer.diagnostic));
   message.append(body);
   conversation.append(message);
   scrollToMessage(message);
@@ -772,6 +821,7 @@ async function ask(question, options = {}) {
     retry.type = 'button';
     retry.addEventListener('click', () => { if (!pending) { retry.disabled = true; ask(question, { scope: requestScope }); } });
     body.append(retry);
+    body.append(errorAnnotation(true));
     errMsg.append(body);
     conversation.append(errMsg);
     scrollToMessage(errMsg);

@@ -64,7 +64,34 @@ function harness(fixtures = {}) {
   return { nodes, requests, timers, run: script => vm.runInContext(script, context) };
 }
 const settle = () => new Promise(resolve => setImmediate(resolve));
+test('error annotation supports multiple reviewer codes without inventing an automatic verdict', () => {
+  const h = harness();
+  const panel = h.run('errorAnnotation(true)');
+  const result = panel.children[0];
+  assert.match(result.textContent, /не размечено/);
+  const checks = panel.descendants().filter(node => node.tagName === 'INPUT');
+  assert.equal(checks.length, 6);
+  checks[0].checked = true; checks[2].checked = true;
+  checks[2].listeners.change();
+  assert.match(result.textContent, /E1, E3/);
+  panel.descendants().find(node => node.tagName === 'BUTTON').listeners.click();
+  assert.match(result.textContent, /нет · оценка проверяющего/);
+  assert.ok(checks.every(input => !input.checked));
+  assert.ok(panel.children.some(node => node.textContent?.includes('Технический сбой API')));
+});
 const answer = { intro: 'Ответ по источникам', items: [], end: '', sources: [], mode: 'no_context', passages: [] };
+
+test('chat displays the automatic benchmark verdict and its basis', async () => {
+  const h = harness(); await settle();
+  const pending = h.run('ask("Вопрос-ловушка")');
+  h.requests[0].resolve({ ...answer, diagnostic: {
+    codes: [], label: 'О — корректный отказ на вопрос-ловушку', basis: 'По эталону ответа в корпусе нет.'
+  } });
+  await pending;
+  const text = h.nodes['#conversation'].descendants().map(node => node.textContent || '').join(' ');
+  assert.match(text, /О — корректный отказ/);
+  assert.match(text, /По эталону ответа в корпусе нет/);
+});
 
 test('reset cancels the request and an older completion cannot unlock or render into a newer conversation', async () => {
   const h = harness(); await settle();

@@ -121,4 +121,5 @@ class ChatResponse(BaseModel):
     warning: Optional[str] = None
     passages: list[PassageRead] = Field(default_factory=list)
     diary_summary: Optional[DiarySummary] = None
+    diagnostic: Optional[dict] = None
 

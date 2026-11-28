@@ -93,7 +93,7 @@ class GeminiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(caught.exception.code, "llm_no_context")
 
     async def test_http_errors_are_sanitized_and_not_retried(self):
-        for status, code in [(429, "llm_rate_limit"), (403, "llm_auth"), (401, "llm_auth"), (404, "llm_model_unavailable"), (500, "llm_unavailable"), (400, "llm_unavailable")]:
+        for status, code in [(429, "llm_rate_limit"), (403, "llm_auth"), (401, "llm_auth"), (404, "llm_model_unavailable"), (500, "llm_unavailable"), (400, "llm_request_rejected")]:
             calls = []
 
             def transport(request):
@@ -133,7 +133,7 @@ class GeminiTests(unittest.IsolatedAsyncioTestCase):
         for payload in cases:
             with self.subTest(payload=payload), self.assertRaises(LLMError) as caught:
                 await self.call(payload)
-            self.assertEqual(caught.exception.code, "llm_invalid_response")
+            self.assertIn(caught.exception.code, {"llm_invalid_response", "llm_empty_response", "llm_truncated", "llm_schema_mismatch", "llm_invalid_json"})
 
     async def test_insufficient_context_can_abstain_despite_lexical_matches(self):
         payload = generated({
@@ -145,12 +145,30 @@ class GeminiTests(unittest.IsolatedAsyncioTestCase):
         self.assertFalse(result.answerable)
         self.assertEqual(result.sources, [])
 
-    async def test_abstention_cannot_cite_or_include_an_answer(self):
+    async def test_abstention_discards_advice_and_citations(self):
         refusal = {**ANSWER, "answerable": False, "items": [], "sources": []}
         for answer in [{**refusal, "sources": ["protein"]}, {**refusal, "items": ["100 граммов."]}]:
-            with self.subTest(answer=answer), self.assertRaises(LLMError) as caught:
-                await self.call(generated(answer))
-            self.assertEqual(caught.exception.code, "llm_invalid_response")
+            with self.subTest(answer=answer):
+                result = await self.call(generated(answer))
+                self.assertFalse(result.answerable)
+                self.assertEqual(result.items, [])
+                self.assertEqual(result.sources, [])
+
+    async def test_specific_format_errors_are_not_bad_gateway(self):
+        malformed = generated()
+        malformed['candidates'][0]['content']['parts'][0]['text'] = '{broken'
+        cases = [
+            (generated(finish_reason='MAX_TOKENS'), 'llm_truncated'),
+            ({'candidates': []}, 'llm_empty_response'),
+            (malformed, 'llm_invalid_json'),
+            (generated({**ANSWER, 'answerable': 'yes'}), 'llm_schema_mismatch'),
+        ]
+        for payload, expected in cases:
+            with self.subTest(expected=expected), self.assertRaises(LLMError) as caught:
+                await self.call(payload)
+            self.assertEqual(caught.exception.code, expected)
+            self.assertEqual(caught.exception.status_code, 424)
+            self.assertNotIn('test-key', caught.exception.message)
 
     async def test_invented_citations_rejected_and_duplicates_removed(self):
         with self.assertRaises(LLMError) as caught:
