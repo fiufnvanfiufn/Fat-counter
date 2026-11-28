@@ -91,6 +91,17 @@ record_count — число записанных блюд, а не приёмо�
 """
 
 
+def _provider_reason(response: httpx.Response) -> str:
+    """Only the provider's status code name; upstream messages and bodies are never echoed."""
+    try:
+        status = str(response.json().get("error", {}).get("status", ""))
+    except (ValueError, AttributeError):
+        return ""
+    if not status or not status.replace("_", "").isalnum():
+        return ""
+    return f", {status[:40]}"
+
+
 class GeminiClient:
     def __init__(self, settings: Settings, client: httpx.AsyncClient | None = None):
         self.settings = settings
@@ -160,7 +171,7 @@ class GeminiClient:
         if not response.is_success:
             if response.status_code >= 500:
                 raise LLMError("llm_unavailable", f"Сервис Gemini временно недоступен (HTTP {response.status_code}). Повторите запрос позже.", 503)
-            raise LLMError("llm_request_rejected", f"Gemini отклонил параметры запроса (HTTP {response.status_code}). Проверьте модель и настройки генерации.", 424)
+            raise LLMError("llm_request_rejected", f"Gemini отклонил параметры запроса (HTTP {response.status_code}{_provider_reason(response)}). Проверьте модель и настройки генерации.", 424)
 
         try:
             payload = response.json()

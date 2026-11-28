@@ -764,7 +764,7 @@ async function ask(question, options = {}) {
   const controller = new AbortController();
   activeChatController = controller;
   let timedOut = false;
-  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 45000);
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 130000);
 
   closeMenu();
   welcome.hidden = true;
@@ -813,7 +813,7 @@ async function ask(question, options = {}) {
     const errMsg = assistantMessage();
     const body = element('div', 'answer-body chat-error');
     body.setAttribute('role', 'alert');
-    const text = timedOut ? 'Ответ не получен за 45 секунд. Попробуйте повторить запрос.'
+    const text = timedOut ? 'Ответ не получен вовремя. Попробуйте повторить запрос.'
       : e instanceof TypeError ? 'Не удалось связаться с сервером. Проверьте подключение и запуск backend.'
       : e.message || 'Не удалось получить ответ. Попробуйте ещё раз.';
     body.append(element('p', '', text));
