@@ -1,0 +1,613 @@
+[
+  {
+    "id": "D01",
+    "title": "Сброс изменений",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Сброс изменений». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Git documentation",
+    "url": "https://git-scm.com/docs/git-reset",
+    "updated_at": "2026-11-28",
+    "content": "Сбрасывает состояние репозитория. Команда: git reset <mode> <commit>. Примеры: git reset --soft HEAD~1; git reset --hard HEAD; git reset file.txt.",
+    "keywords": [
+      "git",
+      "reset",
+      "сброс",
+      "откат",
+      "undo",
+      "сбросить",
+      "откатить",
+      "отменить",
+      "коммит"
+    ]
+  },
+  {
+    "id": "D02",
+    "title": "Откат коммита",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Откат коммита». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Git documentation",
+    "url": "https://git-scm.com/docs/git-revert",
+    "updated_at": "2026-11-28",
+    "content": "Создаёт новый коммит, отменяющий указанный. Команда: git revert <commit>. Примеры: git revert abc123; git revert HEAD; git revert -n abc123.",
+    "keywords": [
+      "git",
+      "revert",
+      "откат",
+      "отмена",
+      "undo",
+      "откатить",
+      "отменить",
+      "коммит"
+    ]
+  },
+  {
+    "id": "D03",
+    "title": "Reflog",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Reflog». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Git documentation",
+    "url": "https://git-scm.com/docs/git-reflog",
+    "updated_at": "2026-11-28",
+    "content": "Показывает историю перемещений HEAD. Команда: git reflog. Примеры: git reflog; git reflog show main; git reset --hard HEAD@{2}.",
+    "keywords": [
+      "git",
+      "reflog",
+      "история",
+      "head",
+      "history",
+      "восстановить",
+      "потерянный",
+      "коммит"
+    ]
+  },
+  {
+    "id": "D04",
+    "title": "Права доступа",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Права доступа». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "GNU Coreutils manual",
+    "url": "https://www.gnu.org/software/coreutils/manual/html_node/chmod-invocation.html",
+    "updated_at": "2026-11-28",
+    "content": "Меняет права доступа. Команда: chmod <mode> <file>. Примеры: chmod +x script.sh; chmod 644 file.txt; chmod -R 755 scripts/.",
+    "keywords": [
+      "permissions",
+      "chmod",
+      "access",
+      "security",
+      "linux",
+      "mac",
+      "права",
+      "доступ",
+      "исполняемый",
+      "executable",
+      "запуск",
+      "скрипт",
+      "script",
+      "файл"
+    ]
+  },
+  {
+    "id": "D05",
+    "title": "Смена владельца",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Смена владельца». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "GNU Coreutils manual",
+    "url": "https://www.gnu.org/software/coreutils/manual/html_node/chown-invocation.html",
+    "updated_at": "2026-11-28",
+    "content": "Меняет владельца файла. Требует sudo. Команда: chown <user>:<group> <file>. Примеры: chown user file.txt; sudo chown -R user:group /var/www; chown :www-data file.txt.",
+    "keywords": [
+      "owner",
+      "chown",
+      "user",
+      "group",
+      "linux",
+      "mac",
+      "владелец"
+    ]
+  },
+  {
+    "id": "D06",
+    "title": "Политика выполнения",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Политика выполнения». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/powershell/module/microsoft.powershell.security/set-executionpolicy",
+    "updated_at": "2026-11-28",
+    "content": "Управляет политикой выполнения скриптов. Команда: Set-ExecutionPolicy / Get-ExecutionPolicy. Примеры: Get-ExecutionPolicy; Set-ExecutionPolicy RemoteSigned; Set-ExecutionPolicy Bypass -Scope Process.",
+    "keywords": [
+      "powershell",
+      "policy",
+      "политика",
+      "скрипты",
+      "windows",
+      "scripts",
+      "security",
+      "скрипт",
+      "разрешить",
+      "запуск",
+      "права"
+    ]
+  },
+  {
+    "id": "D07",
+    "title": "Свободное место на дисках",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Свободное место на дисках». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "GNU Coreutils manual",
+    "url": "https://www.gnu.org/software/coreutils/manual/html_node/df-invocation.html",
+    "updated_at": "2026-11-28",
+    "content": "Показывает свободное место на дисках. Команда: df -h. Примеры: df -h; df -h /home; df -i.",
+    "keywords": [
+      "disk",
+      "space",
+      "filesystem",
+      "view",
+      "linux",
+      "mac",
+      "диск",
+      "место",
+      "df"
+    ]
+  },
+  {
+    "id": "D08",
+    "title": "Размер папки",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Размер папки». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "GNU Coreutils manual",
+    "url": "https://www.gnu.org/software/coreutils/manual/html_node/du-invocation.html",
+    "updated_at": "2026-11-28",
+    "content": "Показывает суммарный размер папки. Команда: du -sh <path>. Примеры: du -sh /var/log; du -sh ~/Downloads; du -sh * | sort -h.",
+    "keywords": [
+      "disk",
+      "size",
+      "folder",
+      "directory",
+      "linux",
+      "mac",
+      "размер",
+      "папка",
+      "du"
+    ]
+  },
+  {
+    "id": "D09",
+    "title": "Управление дисками",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Управление дисками». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Apple diskutil man page (mirror)",
+    "url": "https://keith.github.io/xcode-man-pages/diskutil.8.html",
+    "updated_at": "2026-11-28",
+    "content": "Управляет дисками macOS. Команда: diskutil <action>. Примеры: diskutil list; diskutil info /; diskutil unmount /Volumes/USB.",
+    "keywords": [
+      "disk",
+      "mount",
+      "volume",
+      "mac",
+      "диск",
+      "diskutil"
+    ]
+  },
+  {
+    "id": "D10",
+    "title": "Список процессов",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Список процессов». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Linux man-pages",
+    "url": "https://man7.org/linux/man-pages/man1/ps.1.html",
+    "updated_at": "2026-11-28",
+    "content": "Показывает запущенные процессы. Команда: ps aux. Примеры: ps aux; ps aux | grep python; ps -ef --forest.",
+    "keywords": [
+      "process",
+      "list",
+      "view",
+      "task",
+      "linux",
+      "mac",
+      "процесс",
+      "список",
+      "ps"
+    ]
+  },
+  {
+    "id": "D11",
+    "title": "Мониторинг процессов",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Мониторинг процессов». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Linux man-pages",
+    "url": "https://man7.org/linux/man-pages/man1/top.1.html",
+    "updated_at": "2026-11-28",
+    "content": "Мониторинг процессов в реальном времени. Команда: top / htop. Примеры: top; htop; top -u www-data.",
+    "keywords": [
+      "process",
+      "monitor",
+      "cpu",
+      "memory",
+      "linux",
+      "mac",
+      "процесс",
+      "мониторинг",
+      "top",
+      "htop"
+    ]
+  },
+  {
+    "id": "D12",
+    "title": "Завершение процессов",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Завершение процессов». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Linux man-pages",
+    "url": "https://man7.org/linux/man-pages/man1/kill.1.html",
+    "updated_at": "2026-11-28",
+    "content": "Завершает процессы по ID или имени. Команда: kill / killall. Примеры: kill 1234; kill -9 1234; killall python.",
+    "keywords": [
+      "process",
+      "kill",
+      "stop",
+      "terminate",
+      "linux",
+      "mac",
+      "процесс",
+      "завершить"
+    ]
+  },
+  {
+    "id": "D13",
+    "title": "Ping",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Ping». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Linux man-pages",
+    "url": "https://man7.org/linux/man-pages/man8/ping.8.html",
+    "updated_at": "2026-11-28",
+    "content": "Проверяет доступность хоста. Команда: ping <host>. Примеры: ping google.com; ping -c 4 8.8.8.8; ping -i 0.5 <host>.",
+    "keywords": [
+      "network",
+      "ping",
+      "проверка",
+      "доступность",
+      "host",
+      "availability",
+      "проверить",
+      "сервер",
+      "хост",
+      "связь"
+    ]
+  },
+  {
+    "id": "D14",
+    "title": "Traceroute",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Traceroute». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Linux man-pages",
+    "url": "https://man7.org/linux/man-pages/man8/traceroute.8.html",
+    "updated_at": "2026-11-28",
+    "content": "Показывает маршрут до хоста. Команда: traceroute <host>. Примеры: traceroute google.com; tracert google.com; traceroute -n 8.8.8.8.",
+    "keywords": [
+      "network",
+      "traceroute",
+      "маршрут",
+      "путь",
+      "route",
+      "hops",
+      "трассировка",
+      "узлы"
+    ]
+  },
+  {
+    "id": "D15",
+    "title": "MTR",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «MTR». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "BitWizard MTR",
+    "url": "https://www.bitwizard.nl/mtr/",
+    "updated_at": "2026-11-28",
+    "content": "Объединяет ping и traceroute. Команда: mtr <host>. Примеры: mtr google.com; mtr -r -c 10 google.com; mtr --tcp google.com.",
+    "keywords": [
+      "network",
+      "mtr",
+      "маршрут",
+      "ping",
+      "traceroute",
+      "диагностика",
+      "потери",
+      "доступность"
+    ]
+  },
+  {
+    "id": "D16",
+    "title": "Список контейнеров",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Список контейнеров». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Docker Docs",
+    "url": "https://docs.docker.com/reference/cli/docker/container/ls/",
+    "updated_at": "2026-11-28",
+    "content": "Показывает запущенные контейнеры. Команда: docker ps. Примеры: docker ps; docker ps -a; docker ps -q.",
+    "keywords": [
+      "docker",
+      "ps",
+      "контейнеры",
+      "список",
+      "list",
+      "containers",
+      "running",
+      "запущенные",
+      "работающие"
+    ]
+  },
+  {
+    "id": "D17",
+    "title": "Логи контейнера",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Логи контейнера». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Docker Docs",
+    "url": "https://docs.docker.com/reference/cli/docker/container/logs/",
+    "updated_at": "2026-11-28",
+    "content": "Показывает логи контейнера. Команда: docker logs <container>. Примеры: docker logs myapp; docker logs -f myapp; docker logs --tail 100 myapp.",
+    "keywords": [
+      "docker",
+      "logs",
+      "логи",
+      "контейнер",
+      "output",
+      "журнал",
+      "вывод",
+      "ошибки"
+    ]
+  },
+  {
+    "id": "D18",
+    "title": "Войти в контейнер",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Войти в контейнер». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Docker Docs",
+    "url": "https://docs.docker.com/reference/cli/docker/container/exec/",
+    "updated_at": "2026-11-28",
+    "content": "Запускает команду внутри контейнера. Команда: docker exec -it <container> bash. Примеры: docker exec -it myapp bash; docker exec myapp ls /app; docker exec -u root -it myapp sh.",
+    "keywords": [
+      "docker",
+      "exec",
+      "контейнер",
+      "войти",
+      "shell",
+      "bash",
+      "внутрь",
+      "консоль"
+    ]
+  },
+  {
+    "id": "D19",
+    "title": "Выбрать всё",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Выбрать всё». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "SQLite documentation",
+    "url": "https://www.sqlite.org/lang_select.html",
+    "updated_at": "2026-11-28",
+    "content": "Выбирает все строки таблицы. Команда: SELECT * FROM <table>. Примеры: SELECT * FROM users; SELECT * FROM orders; SELECT * FROM logs.",
+    "keywords": [
+      "sql",
+      "select",
+      "выбрать",
+      "таблица",
+      "query",
+      "выборка",
+      "строки"
+    ]
+  },
+  {
+    "id": "D20",
+    "title": "Фильтр WHERE",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Фильтр WHERE». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "SQLite documentation",
+    "url": "https://www.sqlite.org/lang_select.html",
+    "updated_at": "2026-11-28",
+    "content": "Фильтрует строки по условию. Команда: SELECT * FROM <table> WHERE <cond>. Примеры: SELECT * FROM users WHERE age > 18; SELECT * FROM users WHERE city IN ('MSK','SPB'); SELECT * FROM users WHERE name LIKE 'A%'.",
+    "keywords": [
+      "sql",
+      "where",
+      "фильтр",
+      "условие",
+      "filter",
+      "отбор",
+      "строки"
+    ]
+  },
+  {
+    "id": "D21",
+    "title": "Сортировка ORDER BY",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Сортировка ORDER BY». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "SQLite documentation",
+    "url": "https://www.sqlite.org/lang_select.html",
+    "updated_at": "2026-11-28",
+    "content": "Сортирует результат. Команда: SELECT * FROM <table> ORDER BY <col>. Примеры: SELECT * FROM users ORDER BY age; SELECT * FROM users ORDER BY age DESC; SELECT * FROM users ORDER BY city, age DESC.",
+    "keywords": [
+      "sql",
+      "order",
+      "сортировка",
+      "порядок",
+      "sort",
+      "сортировать"
+    ]
+  },
+  {
+    "id": "D22",
+    "title": "Создать виртуальное окружение",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Создать виртуальное окружение». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Python documentation",
+    "url": "https://docs.python.org/3/library/venv.html",
+    "updated_at": "2026-11-28",
+    "content": "Создаёт изолированное окружение. Команда: python -m venv .venv. Примеры: python -m venv .venv; python3 -m venv .venv; .venv/bin/activate.",
+    "keywords": [
+      "python",
+      "venv",
+      "окружение",
+      "изоляция",
+      "virtualenv",
+      "виртуальное",
+      "создать",
+      "изолированное"
+    ]
+  },
+  {
+    "id": "D23",
+    "title": "Установить пакет",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Установить пакет». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "pip documentation",
+    "url": "https://pip.pypa.io/en/stable/cli/pip_install/",
+    "updated_at": "2026-11-28",
+    "content": "Устанавливает пакет из PyPI. Команда: pip install <package>. Примеры: pip install requests; pip install -r requirements.txt; pip install -U pip.",
+    "keywords": [
+      "python",
+      "pip",
+      "установить",
+      "пакет",
+      "install",
+      "package",
+      "библиотека",
+      "зависимость"
+    ]
+  },
+  {
+    "id": "D24",
+    "title": "Заморозить зависимости",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Заморозить зависимости». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "pip documentation",
+    "url": "https://pip.pypa.io/en/stable/cli/pip_freeze/",
+    "updated_at": "2026-11-28",
+    "content": "Выводит список установленных пакетов. Команда: pip freeze. Примеры: pip freeze; pip freeze > requirements.txt; pip freeze | grep django.",
+    "keywords": [
+      "python",
+      "pip",
+      "freeze",
+      "зависимости",
+      "requirements",
+      "список",
+      "пакеты",
+      "сохранить"
+    ]
+  },
+  {
+    "id": "D25",
+    "title": "Подключение к серверу по SSH",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Подключение к серверу по SSH». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "OpenBSD manual pages",
+    "url": "https://man.openbsd.org/ssh.1",
+    "updated_at": "2026-11-28",
+    "content": "Подключается к удалённому серверу. Команда: ssh <user>@<host>. Примеры: ssh user@host; ssh -p 2222 user@host; ssh -i ~/.ssh/key user@host.",
+    "keywords": [
+      "ssh",
+      "remote",
+      "connect",
+      "server",
+      "linux",
+      "mac",
+      "подключиться"
+    ]
+  },
+  {
+    "id": "D26",
+    "title": "Копирование по SSH",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Копирование по SSH». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "OpenBSD manual pages",
+    "url": "https://man.openbsd.org/scp.1",
+    "updated_at": "2026-11-28",
+    "content": "Копирует файлы по SSH. Команда: scp <src> <dst>. Примеры: scp file.txt user@host:/tmp/; scp -r folder/ user@host:~/; scp user@host:/tmp/file.txt ..",
+    "keywords": [
+      "scp",
+      "copy",
+      "remote",
+      "ssh",
+      "linux",
+      "mac",
+      "копировать"
+    ]
+  },
+  {
+    "id": "D27",
+    "title": "Синхронизация файлов",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Синхронизация файлов». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "rsync documentation",
+    "url": "https://rsync.samba.org/documentation.html",
+    "updated_at": "2026-11-28",
+    "content": "Синхронизирует файлы между папками и серверами. Команда: rsync -avz <src> <dst>. Примеры: rsync -avz src/ user@host:/dst/; rsync -avz --delete src/ dst/; rsync -avz -e ssh src/ user@host:/dst/.",
+    "keywords": [
+      "rsync",
+      "sync",
+      "backup",
+      "copy",
+      "remote",
+      "linux",
+      "mac",
+      "синхронизация"
+    ]
+  },
+  {
+    "id": "D28",
+    "title": "Поиск текста в файлах",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Поиск текста в файлах». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "GNU grep manual",
+    "url": "https://www.gnu.org/software/grep/manual/grep.html",
+    "updated_at": "2026-11-28",
+    "content": "Ищет текст в файлах рекурсивно. Команда: grep -r <pattern> <path>. Примеры: grep \"error\" app.log; grep -rin \"todo\" src/; grep -v \"^#\" config.conf.",
+    "keywords": [
+      "search",
+      "text",
+      "filter",
+      "find",
+      "regex",
+      "linux",
+      "mac",
+      "поиск",
+      "текст",
+      "grep"
+    ]
+  },
+  {
+    "id": "D29",
+    "title": "Поиск файлов",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Поиск файлов». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Linux man-pages",
+    "url": "https://man7.org/linux/man-pages/man1/find.1.html",
+    "updated_at": "2026-11-28",
+    "content": "Ищет файлы по имени, размеру, дате, типу. Команда: find <path> <criteria>. Примеры: find . -name \"*.py\"; find /tmp -size +100M; find . -mtime -7 -type f.",
+    "keywords": [
+      "search",
+      "find",
+      "files",
+      "filter",
+      "linux",
+      "mac",
+      "поиск",
+      "найти"
+    ]
+  },
+  {
+    "id": "D30",
+    "title": "Поиск в файлах",
+    "category": "articles",
+    "description": "Учебная шпаргалка по команде «Поиск в файлах». Не полный текст оригинала; сверяйте с документацией по ссылке.",
+    "publisher": "Microsoft Learn",
+    "url": "https://learn.microsoft.com/powershell/module/microsoft.powershell.utility/select-string",
+    "updated_at": "2026-11-28",
+    "content": "Ищет текст в файлах. Команда: Select-String -Pattern <p> -Path <path>. Примеры: Select-String -Pattern \"error\" -Path *.log; Select-String -Pattern \"todo\" -Path src\\*; Select-String -Pattern \"fail\" -Path *.txt.",
+    "keywords": [
+      "powershell",
+      "search",
+      "поиск",
+      "текст",
+      "windows",
+      "grep",
+      "искать",
+      "файлы"
+    ]
+  }
+]

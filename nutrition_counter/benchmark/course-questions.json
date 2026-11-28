@@ -1,0 +1,228 @@
+{
+  "benchmark_id": "course-commands-v1",
+  "version": "1.0.0",
+  "created_on": "2026-11-28",
+  "frozen_before_first_retrieval_run": true,
+  "description": "Учебный набор команд: 30 документов D01–D30, 10 вопросов с ответом и 5 ловушек. Конвертирован из docs.json и questions.json.",
+  "cases": [
+    {
+      "id": "Q01",
+      "kind": "normal",
+      "question": "Как откатить неудачный коммит?",
+      "relevant_documents": [
+        "D01",
+        "D02",
+        "D03"
+      ],
+      "reference_answer": "Откатить коммит можно двумя способами: git revert создаёт новый коммит, отменяющий изменения, а git reset сдвигает ветку назад. Потерянный коммит помогает найти git reflog.",
+      "expected_points": [
+        "Упоминает: git revert",
+        "Упоминает: git reset"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q02",
+      "kind": "normal",
+      "question": "Скрипт не запускается — не хватает прав. Что делать?",
+      "relevant_documents": [
+        "D04",
+        "D05",
+        "D06"
+      ],
+      "reference_answer": "В Linux и macOS выдать право на запуск командой chmod +x, при чужом владельце файла — сменить его через chown. В Windows разрешить скрипты через Set-ExecutionPolicy.",
+      "expected_points": [
+        "Упоминает: chmod"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q03",
+      "kind": "normal",
+      "question": "Сколько места осталось на диске и что его занимает?",
+      "relevant_documents": [
+        "D07",
+        "D08",
+        "D09"
+      ],
+      "reference_answer": "Свободное место по дискам показывает df -h, размер конкретной папки — du -sh. В macOS диски обслуживает diskutil.",
+      "expected_points": [
+        "Упоминает: df -h",
+        "Упоминает: du -sh"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q04",
+      "kind": "normal",
+      "question": "Какие программы сейчас запущены и как завершить зависшую?",
+      "relevant_documents": [
+        "D10",
+        "D11",
+        "D12"
+      ],
+      "reference_answer": "Список процессов — ps aux, живой мониторинг — top или htop. Зависший процесс завершают командой kill (по PID) или killall (по имени).",
+      "expected_points": [
+        "Упоминает: ps aux",
+        "Упоминает: kill"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q05",
+      "kind": "normal",
+      "question": "Проверить, отвечает ли сервер, и через какие узлы идёт трафик до него",
+      "relevant_documents": [
+        "D13",
+        "D14",
+        "D15"
+      ],
+      "reference_answer": "Доступность хоста проверяет ping, маршрут по узлам показывает traceroute, а mtr сочетает обе проверки в реальном времени.",
+      "expected_points": [
+        "Упоминает: ping",
+        "Упоминает: traceroute"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q06",
+      "kind": "normal",
+      "question": "Посмотреть запущенные контейнеры, их логи и зайти внутрь",
+      "relevant_documents": [
+        "D16",
+        "D17",
+        "D18"
+      ],
+      "reference_answer": "Запущенные контейнеры — docker ps, вывод приложения — docker logs <container>, войти внутрь — docker exec -it <container> bash.",
+      "expected_points": [
+        "Упоминает: docker ps",
+        "Упоминает: docker logs"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q07",
+      "kind": "normal",
+      "question": "Как выбрать из таблицы записи по условию и упорядочить их?",
+      "relevant_documents": [
+        "D19",
+        "D20",
+        "D21"
+      ],
+      "reference_answer": "Выборка делается SELECT ... FROM <table>, условие задаёт WHERE, порядок строк — ORDER BY.",
+      "expected_points": [
+        "Упоминает: where",
+        "Упоминает: order by"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q08",
+      "kind": "normal",
+      "question": "Создать изолированное окружение для проекта и поставить в него зависимости",
+      "relevant_documents": [
+        "D22",
+        "D23",
+        "D24"
+      ],
+      "reference_answer": "Окружение создаёт python -m venv .venv, пакеты ставит pip install <package>, список зависимостей для проекта фиксирует pip freeze.",
+      "expected_points": [
+        "Упоминает: venv",
+        "Упоминает: pip install"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q09",
+      "kind": "normal",
+      "question": "Подключиться к удалённому серверу и передать на него файлы",
+      "relevant_documents": [
+        "D25",
+        "D26",
+        "D27"
+      ],
+      "reference_answer": "Подключение — ssh <user>@<host>, разовое копирование — scp, синхронизация каталогов с докачкой — rsync -avz.",
+      "expected_points": [
+        "Упоминает: ssh",
+        "Упоминает: scp"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "Q10",
+      "kind": "normal",
+      "question": "Найти строку текста внутри файлов и найти файл по имени",
+      "relevant_documents": [
+        "D28",
+        "D29",
+        "D30"
+      ],
+      "reference_answer": "Текст внутри файлов ищет grep -r, файлы по имени и условиям — find. В Windows поиск по содержимому — Select-String.",
+      "expected_points": [
+        "Упоминает: grep",
+        "Упоминает: find"
+      ],
+      "should_abstain": false
+    },
+    {
+      "id": "T01",
+      "kind": "trap",
+      "question": "Как настроить файрвол и открыть порт 443 на сервере?",
+      "relevant_documents": [],
+      "reference_answer": "В документах нет этой информации",
+      "expected_points": [
+        "Не выдумывает ответ при отсутствии данных в документах"
+      ],
+      "should_abstain": true,
+      "missing_information": "В документах нет этой информации"
+    },
+    {
+      "id": "T02",
+      "kind": "trap",
+      "question": "Как упаковать папку в архив tar.gz?",
+      "relevant_documents": [],
+      "reference_answer": "В документах нет этой информации",
+      "expected_points": [
+        "Не выдумывает ответ при отсутствии данных в документах"
+      ],
+      "should_abstain": true,
+      "missing_information": "В документах нет этой информации"
+    },
+    {
+      "id": "T03",
+      "kind": "trap",
+      "question": "Как создать ветку в git и слить её с основной?",
+      "relevant_documents": [],
+      "reference_answer": "В документах нет этой информации",
+      "expected_points": [
+        "Не выдумывает ответ при отсутствии данных в документах"
+      ],
+      "should_abstain": true,
+      "missing_information": "В документах нет этой информации"
+    },
+    {
+      "id": "T04",
+      "kind": "trap",
+      "question": "Как сделать резервную копию базы данных SQL?",
+      "relevant_documents": [],
+      "reference_answer": "В документах нет этой информации",
+      "expected_points": [
+        "Не выдумывает ответ при отсутствии данных в документах"
+      ],
+      "should_abstain": true,
+      "missing_information": "В документах нет этой информации"
+    },
+    {
+      "id": "T05",
+      "kind": "trap",
+      "question": "Как запустить автотесты и посмотреть покрытие кода?",
+      "relevant_documents": [],
+      "reference_answer": "В документах нет этой информации",
+      "expected_points": [
+        "Не выдумывает ответ при отсутствии данных в документах"
+      ],
+      "should_abstain": true,
+      "missing_information": "В документах нет этой информации"
+    }
+  ]
+}

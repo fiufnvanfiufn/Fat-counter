@@ -207,6 +207,8 @@ def main() -> int:
                         help="Corpus to evaluate; default is the archived v1 corpus, not the evolving app corpus")
     parser.add_argument("--title-weight", type=float, default=0,
                         help="Title BM25 boost: 0 reproduces original v1; 2 uses app retrieval v2")
+    parser.add_argument("--questions", type=Path, default=BENCHMARK_DIR / "questions.json",
+                        help="Question set to evaluate; default is the nutrition benchmark")
     parser.add_argument("--delay", type=float, default=0, help="Seconds between live questions, 0–60; no retries")
     parser.add_argument("--export-documents", action="store_true", help="Refresh readable documents.md and answer_key.md from frozen inputs")
     parser.add_argument("--output", type=Path, default=None, help="Output prefix for .json and .md reports")
@@ -217,7 +219,7 @@ def main() -> int:
         parser.error("--title-weight must be between 0 and 10")
     try:
         articles = load_articles(args.corpus)
-        questions_path = BENCHMARK_DIR / "questions.json"
+        questions_path = args.questions
         dataset, cases = load_cases(questions_path, articles)
         index = BM25Index(articles, title_weight=args.title_weight)
         rows = evaluate_retrieval(index, cases)

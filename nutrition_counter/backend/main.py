@@ -18,7 +18,7 @@ from database import get_db, init_db, sync_articles, get_diary_context
 from llm import LLMError
 from diagnostics import annotate
 from rag import RagService
-from retrieval import BM25Index, load_articles
+from retrieval import CORPUS_PATH, BM25Index, load_articles
 from schemas import (
     ChatRequest,
     ChatResponse,
@@ -35,8 +35,8 @@ from schemas import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    articles = load_articles()
     settings = load_settings()
+    articles = load_articles(settings.knowledge_path or CORPUS_PATH)
     await init_db()
     await sync_articles(articles)
     app.state.rag = RagService(BM25Index(articles), settings)
